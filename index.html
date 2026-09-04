@@ -128,26 +128,30 @@
             color: #1a202c;
         }
 
-        /* Input del número de proforma - SIN FONDO */
+        /* Input del número de proforma - CLARAMENTE EDITABLE */
         #numeroProforma {
-            background: transparent !important;
-            border: none !important;
+            background: #f0f4f8;
+            border: 2px solid #1a6fc4;
             text-align: right;
-            width: 100%;
+            width: 120px;
             font-size: 2rem;
             font-weight: 700;
             color: #0d3b66;
             font-family: 'Roboto Mono', monospace;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            outline: none !important;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: text;
+        }
+
+        #numeroProforma:hover {
+            background: #e2e8f0;
+            border-color: #0d3b66;
         }
 
         #numeroProforma:focus {
-            background: #f0f4f8 !important;
-            border-radius: 4px;
-            padding: 4px !important;
+            background: white;
+            border-color: #1a6fc4;
+            box-shadow: 0 0 0 3px rgba(26, 111, 196, 0.2);
         }
 
         .ocultar-pdf {
@@ -160,46 +164,6 @@
 
         .mostrar-pdf-inline {
             display: inline !important;
-        }
-
-        /* Optimización para PDF - Reducir espacios */
-        .pdf-optimizado {
-            padding: 20px !important;
-        }
-
-        .pdf-optimizado .print-header {
-            padding-bottom: 10px !important;
-            margin-bottom: 10px !important;
-        }
-
-        .pdf-optimizado .card {
-            padding: 10px !important;
-            margin-bottom: 10px !important;
-        }
-
-        .pdf-optimizado .print-section {
-            margin-bottom: 10px !important;
-        }
-
-        .pdf-optimizado h2 {
-            font-size: 1.5rem !important;
-        }
-
-        .pdf-optimizado h3 {
-            font-size: 0.9rem !important;
-            margin-bottom: 5px !important;
-        }
-
-        .pdf-optimizado .space-y-3 > * + * {
-            margin-top: 5px !important;
-        }
-
-        .pdf-optimizado table {
-            font-size: 0.75rem !important;
-        }
-
-        .pdf-optimizado th, .pdf-optimizado td {
-            padding: 4px 6px !important;
         }
 
         @media print {
@@ -282,6 +246,7 @@
 
             #numeroProforma {
                 background: transparent !important;
+                border: none !important;
             }
         }
 
@@ -364,9 +329,9 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-600 mb-1">PROFORMA N°</p>
-                        <input type="text" id="numeroProforma" value="#1" class="text-3xl font-bold text-brand-dark font-mono" title="Click para editar el número">
-                        <p class="text-xs text-gray-500 mt-1 no-print">(Click para editar)</p>
+                        <p class="text-sm text-gray-600 mb-2">PROFORMA N°</p>
+                        <input type="text" id="numeroProforma" value="#1" title="Click para editar el número de proforma">
+                        <p class="text-xs text-gray-500 mt-2 no-print">✏️ Editable</p>
                     </div>
                 </div>
                 
@@ -946,12 +911,35 @@
                                 <button onclick="clonarCotizacionID(${c.id})" class="text-green-600 hover:text-green-800 text-sm">
                                     <i class="fas fa-copy"></i> Clonar
                                 </button>
+                                <button onclick="eliminarCotizacion(${c.id})" class="text-red-600 hover:text-red-800 text-sm">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
             });
+        }
+
+        async function eliminarCotizacion(id) {
+            if (!confirm('¿Está seguro de eliminar esta cotización? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                store.delete(id);
+
+                transaction.oncomplete = () => {
+                    showToast('Cotización eliminada correctamente');
+                    buscarCotizaciones(); // Refrescar la lista
+                };
+            } catch (error) {
+                console.error('Error al eliminar:', error);
+                showToast('Error al eliminar la cotización', 'error');
+            }
         }
 
         async function cargarCotizacion(id) {
@@ -1044,39 +1032,52 @@
                 el.classList.add('mostrar-pdf');
             });
             
-            // Agregar clase de optimización
-            const elemento = document.getElementById('cotizacionForm');
-            elemento.classList.add('pdf-optimizado');
-            
             const elementosOcultar = document.querySelectorAll('.no-print');
             elementosOcultar.forEach(el => el.style.display = 'none');
 
             try {
-                await new Promise(resolve => setTimeout(resolve, 100));
+                const elemento = document.getElementById('cotizacionForm');
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 const canvas = await html2canvas(elemento, {
-                    scale: 1.5,
+                    scale: 2,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    windowWidth: elemento.scrollWidth,
-                    windowHeight: elemento.scrollHeight
+                    allowTaint: true
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 210;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+                const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                if (imgHeight <= 297) {
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                } else {
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= 297;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= 297;
+                    }
+                }
 
                 pdf.save(`Proforma_${document.getElementById('numeroProforma').value.replace('#', '')}.pdf`);
                 showToast('PDF generado correctamente');
             } catch (error) {
                 console.error('Error al generar PDF:', error);
-                showToast('Error al generar PDF', 'error');
+                showToast('Error al generar PDF: ' + error.message, 'error');
             } finally {
-                elemento.classList.remove('pdf-optimizado');
                 inputs.forEach(el => el.classList.remove('ocultar-pdf'));
                 textos.forEach(el => {
                     el.classList.add('hidden');
@@ -1121,13 +1122,18 @@
 
                 request.onsuccess = () => {
                     const data = request.result;
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const jsonStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+                    
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `respaldo_cotizaciones_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     URL.revokeObjectURL(url);
+                    
                     showToast('Respaldo exportado correctamente');
                 };
             } catch (error) {
