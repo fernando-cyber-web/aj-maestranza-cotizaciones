@@ -118,6 +118,19 @@
             object-fit: contain;
         }
 
+        /* Ocultar inputs al generar PDF */
+        .generando-pdf .input-pdf {
+            display: none !important;
+        }
+        
+        .generando-pdf .texto-pdf {
+            display: block !important;
+        }
+
+        .texto-pdf {
+            display: none;
+        }
+
         @media print {
             body {
                 background: white;
@@ -194,6 +207,14 @@
             .editable-field {
                 border: none;
                 background: transparent;
+            }
+
+            .input-pdf {
+                display: none !important;
+            }
+            
+            .texto-pdf {
+                display: block !important;
             }
         }
 
@@ -305,10 +326,17 @@
                         <i class="fas fa-user mr-2"></i> DATOS DEL CLIENTE
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                        <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                        <span id="clienteNombreTexto" class="texto-pdf font-medium"></span>
+                        
+                        <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                        <span id="clienteNITTexto" class="texto-pdf"></span>
+                        
+                        <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                        <span id="clienteTelefonoTexto" class="texto-pdf"></span>
+                        
+                        <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf"></textarea>
+                        <span id="clienteDireccionTexto" class="texto-pdf"></span>
                     </div>
                 </div>
 
@@ -318,16 +346,19 @@
                     </h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1">Fecha de Emisión</label>
-                            <input type="date" id="fechaEmision" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Fecha de Emisión</label>
+                            <input type="date" id="fechaEmision" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <span id="fechaEmisionTexto" class="texto-pdf"></span>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1">Fecha de Vencimiento</label>
-                            <input type="date" id="fechaVencimiento" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Fecha de Vencimiento</label>
+                            <input type="date" id="fechaVencimiento" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <span id="fechaVencimientoTexto" class="texto-pdf"></span>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1">Validez (días)</label>
-                            <input type="number" id="validezDias" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Validez (días)</label>
+                            <input type="number" id="validezDias" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <span id="validezDiasTexto" class="texto-pdf"></span>
                         </div>
                     </div>
                 </div>
@@ -357,19 +388,20 @@
                         <tfoot class="bg-brand-light">
                             <tr>
                                 <td colspan="5" class="px-3 py-2 text-right font-semibold text-brand-dark">SUBTOTAL:</td>
-                                <td class="px-3 py-2 text-right font-mono font-semibold" id="subtotal">0.00</td>
+                                <td class="px-3 py-2 text-right font-mono font-semibold" id="subtotal">0</td>
                                 <td class="no-print"></td>
                             </tr>
                             <tr>
                                 <td colspan="5" class="px-3 py-2 text-right font-semibold text-brand-dark">DESCUENTO:</td>
                                 <td class="px-3 py-2 text-right">
-                                    <input type="number" id="descuento" value="0" min="0" class="w-24 px-2 py-1 text-right border border-gray-300 rounded font-mono" oninput="calcularTotales()">
+                                    <input type="number" id="descuento" value="0" min="0" class="w-24 px-2 py-1 text-right border border-gray-300 rounded font-mono input-pdf" oninput="calcularTotales()">
+                                    <span id="descuentoTexto" class="texto-pdf">0</span>
                                 </td>
                                 <td class="no-print"></td>
                             </tr>
                             <tr class="print-total">
                                 <td colspan="5" class="px-3 py-4 text-right font-bold text-brand-dark text-lg">TOTAL:</td>
-                                <td class="px-3 py-4 text-right font-mono font-bold text-brand-dark text-2xl" id="totalFinal">0.00</td>
+                                <td class="px-3 py-4 text-right font-mono font-bold text-brand-dark text-2xl" id="totalFinal">0</td>
                                 <td class="no-print"></td>
                             </tr>
                         </tfoot>
@@ -390,30 +422,34 @@
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-map-pin text-brand-blue"></i>
                             <span><strong>Lugar de entrega:</strong></span>
-                            <input type="text" id="lugarEntrega" placeholder="________________" class="flex-1 border-b border-gray-300 outline-none">
+                            <input type="text" id="lugarEntrega" placeholder="________________" class="flex-1 border-b border-gray-300 outline-none input-pdf">
+                            <span id="lugarEntregaTexto" class="texto-pdf"></span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-clock text-brand-blue"></i>
                             <span><strong>Tiempo de entrega:</strong></span>
-                            <input type="number" id="tiempoEntrega" value="0" min="0" class="w-16 border-b border-gray-300 outline-none">
+                            <input type="number" id="tiempoEntrega" value="0" min="0" class="w-16 border-b border-gray-300 outline-none input-pdf">
+                            <span id="tiempoEntregaTexto" class="texto-pdf"></span>
                             <span>días</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-money-bill-wave text-brand-blue"></i>
                             <span><strong>Forma de pago:</strong></span>
-                            <select id="formaPago" class="flex-1 border-b border-gray-300 outline-none">
+                            <select id="formaPago" class="flex-1 border-b border-gray-300 outline-none input-pdf">
                                 <option value="Contado">Contado</option>
                                 <option value="50% anticipo">50% anticipo</option>
                                 <option value="Crédito">Crédito</option>
                                 <option value="Transferencia">Transferencia</option>
                             </select>
+                            <span id="formaPagoTexto" class="texto-pdf"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="card p-4">
                     <h3 class="text-brand-dark font-bold mb-3">NOTAS ADICIONALES</h3>
-                    <textarea id="notasAdicionales" rows="4" placeholder="Observaciones, especificaciones técnicas, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>
+                    <textarea id="notasAdicionales" rows="4" placeholder="Observaciones, especificaciones técnicas, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm input-pdf"></textarea>
+                    <span id="notasAdicionalesTexto" class="texto-pdf"></span>
                 </div>
             </div>
 
@@ -591,26 +627,30 @@
             row.id = `item-${itemCounter}`;
             
             row.innerHTML = `
-                <td class="px-3 py-3 text-sm font-mono">${itemCounter}</td>
+                <td class="px-3 py-3 text-sm font-mono item-numero">${itemCounter}</td>
                 <td class="px-3 py-3">
-                    <input type="number" min="1" value="1" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center" oninput="calcularTotales()">
+                    <input type="number" min="1" value="1" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center input-pdf" oninput="calcularTotales()">
+                    <span class="item-cantidad-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
-                    <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded" onchange="calcularTotales()">
+                    <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded input-pdf" onchange="calcularTotales()">
                         <option value="Pzas">Pzas</option>
                         <option value="Unid">Unid</option>
                         <option value="Kg">Kg</option>
                         <option value="Mt">Mt</option>
                         <option value="Serv">Serv</option>
                     </select>
+                    <span class="item-unidad-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
-                    <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded" placeholder="Descripción del producto/servicio">
+                    <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded input-pdf" placeholder="Descripción del producto/servicio">
+                    <span class="item-descripcion-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
-                    <input type="number" min="0" step="0.01" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono" value="0" oninput="calcularTotales()">
+                    <input type="number" min="0" step="1" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono input-pdf" value="0" oninput="calcularTotales()">
+                    <span class="item-precio-texto texto-pdf font-mono"></span>
                 </td>
-                <td class="px-3 py-3 text-right font-mono font-semibold item-total">0.00</td>
+                <td class="px-3 py-3 text-right font-mono font-semibold item-total">0</td>
                 <td class="px-3 py-3 text-center no-print">
                     <button onclick="eliminarItem(${itemCounter})" class="text-red-500 hover:text-red-700">
                         <i class="fas fa-trash"></i>
@@ -633,7 +673,7 @@
         function renumerarItems() {
             const rows = document.querySelectorAll('#itemsTable tr');
             rows.forEach((row, index) => {
-                row.querySelector('td:first-child').textContent = index + 1;
+                row.querySelector('.item-numero').textContent = index + 1;
             });
         }
 
@@ -642,19 +682,19 @@
             const rows = document.querySelectorAll('#itemsTable tr');
             
             rows.forEach(row => {
-                const cantidad = parseFloat(row.querySelector('.item-cantidad').value) || 0;
-                const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
+                const cantidad = parseInt(row.querySelector('.item-cantidad').value) || 0;
+                const precio = parseInt(row.querySelector('.item-precio').value) || 0;
                 const total = cantidad * precio;
                 
-                row.querySelector('.item-total').textContent = total.toFixed(2);
+                row.querySelector('.item-total').textContent = total;
                 subtotal += total;
             });
 
-            const descuento = parseFloat(document.getElementById('descuento').value) || 0;
+            const descuento = parseInt(document.getElementById('descuento').value) || 0;
             const total = subtotal - descuento;
 
-            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-            document.getElementById('totalFinal').textContent = total.toFixed(2);
+            document.getElementById('subtotal').textContent = subtotal;
+            document.getElementById('totalFinal').textContent = total;
         }
 
         async function guardarCotizacion() {
@@ -695,8 +735,8 @@
                     cantidad: parseInt(row.querySelector('.item-cantidad').value) || 0,
                     unidad: row.querySelector('.item-unidad').value,
                     descripcion: row.querySelector('.item-descripcion').value,
-                    precio: parseFloat(row.querySelector('.item-precio').value) || 0,
-                    total: parseFloat(row.querySelector('.item-total').textContent) || 0
+                    precio: parseInt(row.querySelector('.item-precio').value) || 0,
+                    total: parseInt(row.querySelector('.item-total').textContent) || 0
                 });
             });
 
@@ -710,9 +750,9 @@
                 telefono: document.getElementById('clienteTelefono').value,
                 direccion: document.getElementById('clienteDireccion').value,
                 items: items,
-                subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
-                descuento: parseFloat(document.getElementById('descuento').value) || 0,
-                total: parseFloat(document.getElementById('totalFinal').textContent) || 0,
+                subtotal: parseInt(document.getElementById('subtotal').textContent) || 0,
+                descuento: parseInt(document.getElementById('descuento').value) || 0,
+                total: parseInt(document.getElementById('totalFinal').textContent) || 0,
                 lugarEntrega: document.getElementById('lugarEntrega').value,
                 tiempoEntrega: parseInt(document.getElementById('tiempoEntrega').value) || 0,
                 formaPago: document.getElementById('formaPago').value,
@@ -790,7 +830,7 @@
                             <p class="text-xs text-gray-500">${new Date(c.fecha).toLocaleDateString('es-BO')}</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-mono font-bold text-brand-blue">Bs ${c.total.toFixed(2)}</p>
+                            <p class="font-mono font-bold text-brand-blue">Bs ${c.total}</p>
                             <div class="flex space-x-2 mt-2">
                                 <button onclick="cargarCotizacion(${c.id})" class="text-blue-600 hover:text-blue-800 text-sm">
                                     <i class="fas fa-edit"></i> Cargar
@@ -831,39 +871,12 @@
                         document.getElementById('itemsTable').innerHTML = '';
                         itemCounter = 0;
                         c.items.forEach(item => {
-                            itemCounter++;
-                            const tbody = document.getElementById('itemsTable');
-                            const row = document.createElement('tr');
-                            row.className = 'table-row border-b border-gray-200';
-                            row.id = `item-${itemCounter}`;
-                            row.innerHTML = `
-                                <td class="px-3 py-3 text-sm font-mono">${itemCounter}</td>
-                                <td class="px-3 py-3">
-                                    <input type="number" min="1" value="${item.cantidad}" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center" oninput="calcularTotales()">
-                                </td>
-                                <td class="px-3 py-3">
-                                    <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded" onchange="calcularTotales()">
-                                        <option value="Pzas" ${item.unidad === 'Pzas' ? 'selected' : ''}>Pzas</option>
-                                        <option value="Unid" ${item.unidad === 'Unid' ? 'selected' : ''}>Unid</option>
-                                        <option value="Kg" ${item.unidad === 'Kg' ? 'selected' : ''}>Kg</option>
-                                        <option value="Mt" ${item.unidad === 'Mt' ? 'selected' : ''}>Mt</option>
-                                        <option value="Serv" ${item.unidad === 'Serv' ? 'selected' : ''}>Serv</option>
-                                    </select>
-                                </td>
-                                <td class="px-3 py-3">
-                                    <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded" value="${item.descripcion}" placeholder="Descripción del producto/servicio">
-                                </td>
-                                <td class="px-3 py-3">
-                                    <input type="number" min="0" step="0.01" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono" value="${item.precio}" oninput="calcularTotales()">
-                                </td>
-                                <td class="px-3 py-3 text-right font-mono font-semibold item-total">${item.total.toFixed(2)}</td>
-                                <td class="px-3 py-3 text-center no-print">
-                                    <button onclick="eliminarItem(${itemCounter})" class="text-red-500 hover:text-red-700">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            `;
-                            tbody.appendChild(row);
+                            agregarItem();
+                            const row = document.getElementById(`item-${itemCounter}`);
+                            row.querySelector('.item-cantidad').value = item.cantidad;
+                            row.querySelector('.item-unidad').value = item.unidad;
+                            row.querySelector('.item-descripcion').value = item.descripcion;
+                            row.querySelector('.item-precio').value = item.precio;
                         });
                         
                         document.getElementById('descuento').value = c.descuento || 0;
@@ -911,19 +924,28 @@
         }
 
         async function generarPDF() {
+            // Actualizar textos antes de generar PDF
+            actualizarTextosPDF();
+            
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
             const elemento = document.getElementById('cotizacionForm');
+            
+            // Agregar clase para ocultar inputs
+            elemento.classList.add('generando-pdf');
             
             const elementosOcultar = document.querySelectorAll('.no-print');
             elementosOcultar.forEach(el => el.style.display = 'none');
 
             try {
+                // Esperar un momento para que los cambios se apliquen
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 const canvas = await html2canvas(elemento, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    backgroundColor: null,
+                    backgroundColor: '#ffffff',
                     windowWidth: elemento.scrollWidth,
                     windowHeight: elemento.scrollHeight
                 });
@@ -951,8 +973,35 @@
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
+                // Restaurar
+                elemento.classList.remove('generando-pdf');
                 elementosOcultar.forEach(el => el.style.display = '');
             }
+        }
+
+        function actualizarTextosPDF() {
+            // Actualizar todos los textos para el PDF
+            document.getElementById('clienteNombreTexto').textContent = document.getElementById('clienteNombre').value;
+            document.getElementById('clienteNITTexto').textContent = document.getElementById('clienteNIT').value;
+            document.getElementById('clienteTelefonoTexto').textContent = document.getElementById('clienteTelefono').value;
+            document.getElementById('clienteDireccionTexto').textContent = document.getElementById('clienteDireccion').value;
+            document.getElementById('fechaEmisionTexto').textContent = document.getElementById('fechaEmision').value;
+            document.getElementById('fechaVencimientoTexto').textContent = document.getElementById('fechaVencimiento').value;
+            document.getElementById('validezDiasTexto').textContent = document.getElementById('validezDias').value + ' días';
+            document.getElementById('descuentoTexto').textContent = document.getElementById('descuento').value;
+            document.getElementById('lugarEntregaTexto').textContent = document.getElementById('lugarEntrega').value;
+            document.getElementById('tiempoEntregaTexto').textContent = document.getElementById('tiempoEntrega').value;
+            document.getElementById('formaPagoTexto').textContent = document.getElementById('formaPago').value;
+            document.getElementById('notasAdicionalesTexto').textContent = document.getElementById('notasAdicionales').value;
+            
+            // Actualizar items
+            const rows = document.querySelectorAll('#itemsTable tr');
+            rows.forEach(row => {
+                row.querySelector('.item-cantidad-texto').textContent = row.querySelector('.item-cantidad').value;
+                row.querySelector('.item-unidad-texto').textContent = row.querySelector('.item-unidad').value;
+                row.querySelector('.item-descripcion-texto').textContent = row.querySelector('.item-descripcion').value;
+                row.querySelector('.item-precio-texto').textContent = row.querySelector('.item-precio').value;
+            });
         }
 
         async function exportarRespaldo() {
@@ -1204,7 +1253,7 @@
                         console.log('✅ Service Worker registrado:', registration.scope);
                     })
                     .catch((error) => {
-                        console.log('❌ Error al registrar Service Worker:', error);
+                        console.log(' Error al registrar Service Worker:', error);
                     });
             });
         }
