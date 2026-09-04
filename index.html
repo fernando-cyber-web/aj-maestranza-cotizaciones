@@ -128,6 +128,19 @@
             color: #1a202c;
         }
 
+        /* CLASE PARA OCULTAR ELEMENTOS AL GENERAR PDF */
+        .ocultar-pdf {
+            display: none !important;
+        }
+
+        .mostrar-pdf {
+            display: block !important;
+        }
+
+        .mostrar-pdf-inline {
+            display: inline !important;
+        }
+
         @media print {
             body {
                 background: white;
@@ -204,14 +217,6 @@
             .editable-field {
                 border: none;
                 background: transparent;
-            }
-
-            .input-pdf {
-                display: none !important;
-            }
-            
-            .texto-pdf {
-                display: block !important;
             }
         }
 
@@ -324,27 +329,27 @@
                     </h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Nombre / Razón Social</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Nombre / Razón Social</label>
                             <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">Nombre:</span><span id="clienteNombreTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Nombre:</span><span id="clienteNombreTexto" class="dato-valor"></span></p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">NIT / CI</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">NIT / CI</label>
                             <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">NIT:</span><span id="clienteNITTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">NIT:</span><span id="clienteNITTexto" class="dato-valor"></span></p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Teléfono</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Teléfono</label>
                             <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">Teléfono:</span><span id="clienteTelefonoTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Teléfono:</span><span id="clienteTelefonoTexto" class="dato-valor"></span></p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Dirección</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Dirección</label>
                             <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf"></textarea>
-                            <p class="texto-pdf"><span class="dato-label">Dirección:</span><span id="clienteDireccionTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Dirección:</span><span id="clienteDireccionTexto" class="dato-valor"></span></p>
                         </div>
                     </div>
                 </div>
@@ -355,19 +360,19 @@
                     </h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Fecha de Emisión</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Fecha de Emisión</label>
                             <input type="date" id="fechaEmision" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">Fecha de Emisión:</span><span id="fechaEmisionTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Fecha de Emisión:</span><span id="fechaEmisionTexto" class="dato-valor"></span></p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Fecha de Vencimiento</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Fecha de Vencimiento</label>
                             <input type="date" id="fechaVencimiento" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">Fecha de Vencimiento:</span><span id="fechaVencimientoTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Fecha de Vencimiento:</span><span id="fechaVencimientoTexto" class="dato-valor"></span></p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Validez (días)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 label-pdf">Validez (días)</label>
                             <input type="number" id="validezDias" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <p class="texto-pdf"><span class="dato-label">Validez:</span><span id="validezDiasTexto" class="dato-valor"></span></p>
+                            <p class="texto-pdf hidden"><span class="dato-label">Validez:</span><span id="validezDiasTexto" class="dato-valor"></span></p>
                         </div>
                     </div>
                 </div>
@@ -404,7 +409,7 @@
                                 <td colspan="5" class="px-3 py-2 text-right font-semibold text-brand-dark">DESCUENTO:</td>
                                 <td class="px-3 py-2 text-right">
                                     <input type="number" id="descuento" value="0" min="0" class="w-24 px-2 py-1 text-right border border-gray-300 rounded font-mono input-pdf" oninput="calcularTotales()">
-                                    <span id="descuentoTexto" class="texto-pdf">0</span>
+                                    <span id="descuentoTexto" class="texto-pdf hidden">0</span>
                                 </td>
                                 <td class="no-print"></td>
                             </tr>
@@ -430,26 +435,26 @@
                     <div class="space-y-2 text-sm">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-map-pin text-brand-blue"></i>
-                            <span><strong class="input-pdf">Lugar de entrega:</strong></span>
+                            <span class="label-pdf"><strong>Lugar de entrega:</strong></span>
                             <input type="text" id="lugarEntrega" placeholder="________________" class="flex-1 border-b border-gray-300 outline-none input-pdf">
-                            <span class="texto-pdf"><strong>Lugar de entrega:</strong> <span id="lugarEntregaTexto"></span></span>
+                            <span class="texto-pdf hidden"><strong>Lugar de entrega:</strong> <span id="lugarEntregaTexto"></span></span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-clock text-brand-blue"></i>
-                            <span><strong class="input-pdf">Tiempo de entrega:</strong></span>
+                            <span class="label-pdf"><strong>Tiempo de entrega:</strong></span>
                             <input type="number" id="tiempoEntrega" value="0" min="0" class="w-16 border-b border-gray-300 outline-none input-pdf">
-                            <span class="texto-pdf"><strong>Tiempo de entrega:</strong> <span id="tiempoEntregaTexto"></span> días</span>
+                            <span class="texto-pdf hidden"><strong>Tiempo de entrega:</strong> <span id="tiempoEntregaTexto"></span> días</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-money-bill-wave text-brand-blue"></i>
-                            <span><strong class="input-pdf">Forma de pago:</strong></span>
+                            <span class="label-pdf"><strong>Forma de pago:</strong></span>
                             <select id="formaPago" class="flex-1 border-b border-gray-300 outline-none input-pdf">
                                 <option value="Contado">Contado</option>
                                 <option value="50% anticipo">50% anticipo</option>
                                 <option value="Crédito">Crédito</option>
                                 <option value="Transferencia">Transferencia</option>
                             </select>
-                            <span class="texto-pdf"><strong>Forma de pago:</strong> <span id="formaPagoTexto"></span></span>
+                            <span class="texto-pdf hidden"><strong>Forma de pago:</strong> <span id="formaPagoTexto"></span></span>
                         </div>
                     </div>
                 </div>
@@ -457,7 +462,7 @@
                 <div class="card p-4">
                     <h3 class="text-brand-dark font-bold mb-3">NOTAS ADICIONALES</h3>
                     <textarea id="notasAdicionales" rows="4" placeholder="Observaciones, especificaciones técnicas, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm input-pdf"></textarea>
-                    <div class="texto-pdf">
+                    <div class="texto-pdf hidden">
                         <strong>Notas adicionales:</strong>
                         <p id="notasAdicionalesTexto" class="mt-1"></p>
                     </div>
@@ -656,6 +661,7 @@
                 <td class="px-3 py-3 text-sm font-mono item-numero">${itemCounter}</td>
                 <td class="px-3 py-3">
                     <input type="number" min="1" value="1" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center input-pdf" oninput="calcularTotales()">
+                    <span class="item-cantidad-texto texto-pdf hidden"></span>
                 </td>
                 <td class="px-3 py-3">
                     <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded input-pdf" onchange="calcularTotales()">
@@ -665,12 +671,15 @@
                         <option value="Mt">Mt</option>
                         <option value="Serv">Serv</option>
                     </select>
+                    <span class="item-unidad-texto texto-pdf hidden"></span>
                 </td>
                 <td class="px-3 py-3">
                     <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded input-pdf" placeholder="Descripción del producto/servicio">
+                    <span class="item-descripcion-texto texto-pdf hidden"></span>
                 </td>
                 <td class="px-3 py-3">
                     <input type="number" min="0" step="1" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono input-pdf" value="0" oninput="calcularTotales()">
+                    <span class="item-precio-texto texto-pdf hidden font-mono"></span>
                 </td>
                 <td class="px-3 py-3 text-right font-mono font-semibold item-total">0</td>
                 <td class="px-3 py-3 text-center no-print">
@@ -949,8 +958,18 @@
             // Renumerar ítems antes de generar PDF
             renumerarItems();
             
-            // Actualizar textos antes de generar PDF
+            // Actualizar textos para el PDF
             actualizarTextosPDF();
+            
+            // Ocultar inputs y mostrar textos
+            const inputs = document.querySelectorAll('.input-pdf, .label-pdf');
+            inputs.forEach(el => el.classList.add('ocultar-pdf'));
+            
+            const textos = document.querySelectorAll('.texto-pdf');
+            textos.forEach(el => {
+                el.classList.remove('hidden');
+                el.classList.add('mostrar-pdf');
+            });
             
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -994,6 +1013,12 @@
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
+                // Restaurar todo
+                inputs.forEach(el => el.classList.remove('ocultar-pdf'));
+                textos.forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('mostrar-pdf');
+                });
                 elementosOcultar.forEach(el => el.style.display = '');
             }
         }
@@ -1020,6 +1045,15 @@
             
             // Actualizar notas
             document.getElementById('notasAdicionalesTexto').textContent = document.getElementById('notasAdicionales').value || 'Sin notas adicionales';
+            
+            // Actualizar items
+            const rows = document.querySelectorAll('#itemsTable tr');
+            rows.forEach(row => {
+                row.querySelector('.item-cantidad-texto').textContent = row.querySelector('.item-cantidad').value;
+                row.querySelector('.item-unidad-texto').textContent = row.querySelector('.item-unidad').value;
+                row.querySelector('.item-descripcion-texto').textContent = row.querySelector('.item-descripcion').value;
+                row.querySelector('.item-precio-texto').textContent = row.querySelector('.item-precio').value;
+            });
         }
 
         async function exportarRespaldo() {
