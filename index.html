@@ -128,23 +128,26 @@
             color: #1a202c;
         }
 
-        /* Input del número de proforma */
+        /* Input del número de proforma - SIN FONDO */
         #numeroProforma {
-            background: transparent;
-            border: none;
+            background: transparent !important;
+            border: none !important;
             text-align: right;
             width: 100%;
             font-size: 2rem;
             font-weight: 700;
             color: #0d3b66;
             font-family: 'Roboto Mono', monospace;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
 
         #numeroProforma:focus {
-            outline: none;
-            background: #f0f4f8;
+            background: #f0f4f8 !important;
             border-radius: 4px;
-            padding: 4px;
+            padding: 4px !important;
         }
 
         .ocultar-pdf {
@@ -157,6 +160,46 @@
 
         .mostrar-pdf-inline {
             display: inline !important;
+        }
+
+        /* Optimización para PDF - Reducir espacios */
+        .pdf-optimizado {
+            padding: 20px !important;
+        }
+
+        .pdf-optimizado .print-header {
+            padding-bottom: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .pdf-optimizado .card {
+            padding: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .pdf-optimizado .print-section {
+            margin-bottom: 10px !important;
+        }
+
+        .pdf-optimizado h2 {
+            font-size: 1.5rem !important;
+        }
+
+        .pdf-optimizado h3 {
+            font-size: 0.9rem !important;
+            margin-bottom: 5px !important;
+        }
+
+        .pdf-optimizado .space-y-3 > * + * {
+            margin-top: 5px !important;
+        }
+
+        .pdf-optimizado table {
+            font-size: 0.75rem !important;
+        }
+
+        .pdf-optimizado th, .pdf-optimizado td {
+            padding: 4px 6px !important;
         }
 
         @media print {
@@ -235,6 +278,10 @@
             .editable-field {
                 border: none;
                 background: transparent;
+            }
+
+            #numeroProforma {
+                background: transparent !important;
             }
         }
 
@@ -319,7 +366,7 @@
                     <div class="text-right">
                         <p class="text-sm text-gray-600 mb-1">PROFORMA N°</p>
                         <input type="text" id="numeroProforma" value="#1" class="text-3xl font-bold text-brand-dark font-mono" title="Click para editar el número">
-                        <p class="text-xs text-gray-500 mt-1">(Click para editar)</p>
+                        <p class="text-xs text-gray-500 mt-1 no-print">(Click para editar)</p>
                     </div>
                 </div>
                 
@@ -656,14 +703,12 @@
             cargarConfiguracion();
             cargarLogoGuardado();
             
-            // Evento para sugerir número cuando cambia el cliente
             document.getElementById('clienteNombre').addEventListener('blur', sugerirNumeroPorCliente);
             document.getElementById('clienteNombre').addEventListener('input', function() {
                 document.getElementById('firmaClienteNombre').textContent = this.value || '_________________________';
             });
         });
 
-        // NUEVA FUNCIÓN: Sugerir número de proforma basado en el cliente
         async function sugerirNumeroPorCliente() {
             const cliente = document.getElementById('clienteNombre').value.trim();
             if (!cliente) return;
@@ -677,7 +722,6 @@
                 request.onsuccess = () => {
                     const cotizacionesCliente = request.result;
                     if (cotizacionesCliente && cotizacionesCliente.length > 0) {
-                        // Buscar el número más alto para este cliente
                         let maxNum = 0;
                         cotizacionesCliente.forEach(c => {
                             const num = parseInt(c.numero);
@@ -686,11 +730,8 @@
                         
                         const nuevoNumero = maxNum + 1;
                         document.getElementById('numeroProforma').value = '#' + nuevoNumero;
-                        
-                        // Mostrar notificación sutil
                         showToast(`Sugerido: Proforma #${nuevoNumero} para ${cliente}`, 'info');
                     } else {
-                        // Primera vez con este cliente
                         document.getElementById('numeroProforma').value = '#1';
                     }
                 };
@@ -1003,9 +1044,9 @@
                 el.classList.add('mostrar-pdf');
             });
             
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
+            // Agregar clase de optimización
             const elemento = document.getElementById('cotizacionForm');
+            elemento.classList.add('pdf-optimizado');
             
             const elementosOcultar = document.querySelectorAll('.no-print');
             elementosOcultar.forEach(el => el.style.display = 'none');
@@ -1014,7 +1055,7 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
                 const canvas = await html2canvas(elemento, {
-                    scale: 2,
+                    scale: 1.5,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
@@ -1026,18 +1067,8 @@
                 const imgWidth = 210;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= 297;
-
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= 297;
-                }
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
                 pdf.save(`Proforma_${document.getElementById('numeroProforma').value.replace('#', '')}.pdf`);
                 showToast('PDF generado correctamente');
@@ -1045,6 +1076,7 @@
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
+                elemento.classList.remove('pdf-optimizado');
                 inputs.forEach(el => el.classList.remove('ocultar-pdf'));
                 textos.forEach(el => {
                     el.classList.add('hidden');
