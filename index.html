@@ -128,7 +128,25 @@
             color: #1a202c;
         }
 
-        /* CLASE PARA OCULTAR ELEMENTOS AL GENERAR PDF */
+        /* Input del número de proforma */
+        #numeroProforma {
+            background: transparent;
+            border: none;
+            text-align: right;
+            width: 100%;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0d3b66;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        #numeroProforma:focus {
+            outline: none;
+            background: #f0f4f8;
+            border-radius: 4px;
+            padding: 4px;
+        }
+
         .ocultar-pdf {
             display: none !important;
         }
@@ -299,10 +317,9 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="bg-brand-light rounded-lg px-4 py-2 inline-block">
-                            <p class="text-sm text-gray-600">PROFORMA N°</p>
-                            <p class="text-3xl font-bold text-brand-dark font-mono" id="numeroProforma">#001</p>
-                        </div>
+                        <p class="text-sm text-gray-600 mb-1">PROFORMA N°</p>
+                        <input type="text" id="numeroProforma" value="#1" class="text-3xl font-bold text-brand-dark font-mono" title="Click para editar el número">
+                        <p class="text-xs text-gray-500 mt-1">(Click para editar)</p>
                     </div>
                 </div>
                 
@@ -635,11 +652,52 @@
             await initDB();
             establecerFechas();
             agregarItem();
-            cargarUltimoNumero();
+            document.getElementById('fechaGeneracion').textContent = new Date().toLocaleDateString('es-BO');
             cargarConfiguracion();
             cargarLogoGuardado();
-            document.getElementById('fechaGeneracion').textContent = new Date().toLocaleDateString('es-BO');
+            
+            // Evento para sugerir número cuando cambia el cliente
+            document.getElementById('clienteNombre').addEventListener('blur', sugerirNumeroPorCliente);
+            document.getElementById('clienteNombre').addEventListener('input', function() {
+                document.getElementById('firmaClienteNombre').textContent = this.value || '_________________________';
+            });
         });
+
+        // NUEVA FUNCIÓN: Sugerir número de proforma basado en el cliente
+        async function sugerirNumeroPorCliente() {
+            const cliente = document.getElementById('clienteNombre').value.trim();
+            if (!cliente) return;
+            
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('cliente');
+                const request = index.getAll(cliente);
+                
+                request.onsuccess = () => {
+                    const cotizacionesCliente = request.result;
+                    if (cotizacionesCliente && cotizacionesCliente.length > 0) {
+                        // Buscar el número más alto para este cliente
+                        let maxNum = 0;
+                        cotizacionesCliente.forEach(c => {
+                            const num = parseInt(c.numero);
+                            if (num > maxNum) maxNum = num;
+                        });
+                        
+                        const nuevoNumero = maxNum + 1;
+                        document.getElementById('numeroProforma').value = '#' + nuevoNumero;
+                        
+                        // Mostrar notificación sutil
+                        showToast(`Sugerido: Proforma #${nuevoNumero} para ${cliente}`, 'info');
+                    } else {
+                        // Primera vez con este cliente
+                        document.getElementById('numeroProforma').value = '#1';
+                    }
+                };
+            } catch (error) {
+                console.error('Error al sugerir número:', error);
+            }
+        }
 
         function establecerFechas() {
             const hoy = new Date().toISOString().split('T')[0];
@@ -749,7 +807,6 @@
 
                 transaction.oncomplete = () => {
                     currentId = null;
-                    cargarUltimoNumero();
                     showToast('Cotización guardada correctamente');
                 };
                 
@@ -772,7 +829,7 @@
             });
 
             return {
-                numero: document.getElementById('numeroProforma').textContent.replace('#', ''),
+                numero: document.getElementById('numeroProforma').value.replace('#', ''),
                 fecha: document.getElementById('fechaEmision').value,
                 vencimiento: document.getElementById('fechaVencimiento').value,
                 validez: parseInt(document.getElementById('validezDias').value) || 10,
@@ -790,27 +847,6 @@
                 notas: document.getElementById('notasAdicionales').value,
                 fechaCreacion: new Date().toISOString()
             };
-        }
-
-        async function cargarUltimoNumero() {
-            try {
-                const transaction = db.transaction([STORE_NAME], 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const index = store.index('numero');
-                const request = index.openCursor(null, 'prev');
-
-                request.onsuccess = (event) => {
-                    const cursor = event.target.result;
-                    if (cursor) {
-                        const ultimoNumero = parseInt(cursor.value.numero);
-                        document.getElementById('numeroProforma').textContent = '#' + String(ultimoNumero + 1).padStart(3, '0');
-                    } else {
-                        document.getElementById('numeroProforma').textContent = '#001';
-                    }
-                };
-            } catch (error) {
-                console.error('Error al cargar número:', error);
-            }
         }
 
         function abrirBuscador() {
@@ -886,7 +922,7 @@
                 request.onsuccess = () => {
                     const c = request.result;
                     if (c) {
-                        document.getElementById('numeroProforma').textContent = '#' + c.numero;
+                        document.getElementById('numeroProforma').value = '#' + c.numero;
                         document.getElementById('fechaEmision').value = c.fecha;
                         document.getElementById('fechaVencimiento').value = c.vencimiento;
                         document.getElementById('validezDias').value = c.validez;
@@ -927,8 +963,8 @@
         function clonarCotizacionID(id) {
             cargarCotizacion(id).then(() => {
                 currentId = null;
-                const numActual = parseInt(document.getElementById('numeroProforma').textContent.replace('#', ''));
-                document.getElementById('numeroProforma').textContent = '#' + String(numActual + 1).padStart(3, '0');
+                const numActual = parseInt(document.getElementById('numeroProforma').value.replace('#', ''));
+                document.getElementById('numeroProforma').value = '#' + (numActual + 1);
                 showToast('Cotización clonada. Modifique fecha y precios si es necesario.');
             });
         }
@@ -944,8 +980,8 @@
                 if (cursor) {
                     cargarCotizacion(cursor.value.id).then(() => {
                         currentId = null;
-                        const numActual = parseInt(document.getElementById('numeroProforma').textContent.replace('#', ''));
-                        document.getElementById('numeroProforma').textContent = '#' + String(numActual + 1).padStart(3, '0');
+                        const numActual = parseInt(document.getElementById('numeroProforma').value.replace('#', ''));
+                        document.getElementById('numeroProforma').value = '#' + (numActual + 1);
                         showToast('Última cotización clonada');
                     });
                 } else {
@@ -955,13 +991,9 @@
         }
 
         async function generarPDF() {
-            // Renumerar ítems antes de generar PDF
             renumerarItems();
-            
-            // Actualizar textos para el PDF
             actualizarTextosPDF();
             
-            // Ocultar inputs y mostrar textos
             const inputs = document.querySelectorAll('.input-pdf, .label-pdf');
             inputs.forEach(el => el.classList.add('ocultar-pdf'));
             
@@ -1007,13 +1039,12 @@
                     heightLeft -= 297;
                 }
 
-                pdf.save(`Proforma_${document.getElementById('numeroProforma').textContent.replace('#', '')}.pdf`);
+                pdf.save(`Proforma_${document.getElementById('numeroProforma').value.replace('#', '')}.pdf`);
                 showToast('PDF generado correctamente');
             } catch (error) {
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
-                // Restaurar todo
                 inputs.forEach(el => el.classList.remove('ocultar-pdf'));
                 textos.forEach(el => {
                     el.classList.add('hidden');
@@ -1024,29 +1055,23 @@
         }
 
         function actualizarTextosPDF() {
-            // Actualizar datos del cliente
             document.getElementById('clienteNombreTexto').textContent = document.getElementById('clienteNombre').value || '_________________';
             document.getElementById('clienteNITTexto').textContent = document.getElementById('clienteNIT').value || '_________________';
             document.getElementById('clienteTelefonoTexto').textContent = document.getElementById('clienteTelefono').value || '_________________';
             document.getElementById('clienteDireccionTexto').textContent = document.getElementById('clienteDireccion').value || '_________________';
             
-            // Actualizar datos de la cotización
             document.getElementById('fechaEmisionTexto').textContent = document.getElementById('fechaEmision').value || '_________________';
             document.getElementById('fechaVencimientoTexto').textContent = document.getElementById('fechaVencimiento').value || '_________________';
             document.getElementById('validezDiasTexto').textContent = document.getElementById('validezDias').value + ' días';
             
-            // Actualizar totales
             document.getElementById('descuentoTexto').textContent = document.getElementById('descuento').value;
             
-            // Actualizar condiciones
             document.getElementById('lugarEntregaTexto').textContent = document.getElementById('lugarEntrega').value || '_________________';
             document.getElementById('tiempoEntregaTexto').textContent = document.getElementById('tiempoEntrega').value;
             document.getElementById('formaPagoTexto').textContent = document.getElementById('formaPago').value;
             
-            // Actualizar notas
             document.getElementById('notasAdicionalesTexto').textContent = document.getElementById('notasAdicionales').value || 'Sin notas adicionales';
             
-            // Actualizar items
             const rows = document.querySelectorAll('#itemsTable tr');
             rows.forEach(row => {
                 row.querySelector('.item-cantidad-texto').textContent = row.querySelector('.item-cantidad').value;
@@ -1107,7 +1132,6 @@
 
                 transaction.oncomplete = () => {
                     showToast(`${count} cotizaciones importadas correctamente`);
-                    cargarUltimoNumero();
                 };
             } catch (error) {
                 console.error('Error al importar:', error);
@@ -1126,7 +1150,6 @@
             document.getElementById('configEmail').value = document.getElementById('empresaEmail').textContent;
             document.getElementById('configPropietario').value = document.getElementById('empresaPropietario').textContent;
             
-            // Cargar logo en el preview de configuración
             const logoImg = document.getElementById('logoImg');
             if (!logoImg.classList.contains('hidden')) {
                 document.getElementById('configLogoPreview').innerHTML = `<img src="${logoImg.src}" class="w-full h-full object-contain">`;
@@ -1305,9 +1328,14 @@
             const toastMessage = document.getElementById('toastMessage');
             
             toastMessage.textContent = message;
-            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
-                type === 'error' ? 'bg-red-600' : 'bg-brand-dark'
-            } text-white`;
+            
+            if (type === 'error') {
+                toast.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 bg-red-600 text-white';
+            } else if (type === 'info') {
+                toast.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 bg-blue-600 text-white';
+            } else {
+                toast.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 bg-brand-dark text-white';
+            }
             
             toast.classList.remove('translate-x-full');
             
@@ -1315,10 +1343,6 @@
                 toast.classList.add('translate-x-full');
             }, 3000);
         }
-
-        document.getElementById('clienteNombre').addEventListener('input', function() {
-            document.getElementById('firmaClienteNombre').textContent = this.value || '_________________________';
-        });
     </script>
 
     <script>
