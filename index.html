@@ -118,17 +118,14 @@
             object-fit: contain;
         }
 
-        /* Ocultar inputs al generar PDF */
-        .generando-pdf .input-pdf {
-            display: none !important;
-        }
-        
-        .generando-pdf .texto-pdf {
-            display: block !important;
+        .dato-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-right: 8px;
         }
 
-        .texto-pdf {
-            display: none;
+        .dato-valor {
+            color: #1a202c;
         }
 
         @media print {
@@ -326,17 +323,29 @@
                         <i class="fas fa-user mr-2"></i> DATOS DEL CLIENTE
                     </h3>
                     <div class="space-y-3">
-                        <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                        <span id="clienteNombreTexto" class="texto-pdf font-medium"></span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Nombre / Razón Social</label>
+                            <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <p class="texto-pdf"><span class="dato-label">Nombre:</span><span id="clienteNombreTexto" class="dato-valor"></span></p>
+                        </div>
                         
-                        <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                        <span id="clienteNITTexto" class="texto-pdf"></span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">NIT / CI</label>
+                            <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <p class="texto-pdf"><span class="dato-label">NIT:</span><span id="clienteNITTexto" class="dato-valor"></span></p>
+                        </div>
                         
-                        <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                        <span id="clienteTelefonoTexto" class="texto-pdf"></span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Teléfono</label>
+                            <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
+                            <p class="texto-pdf"><span class="dato-label">Teléfono:</span><span id="clienteTelefonoTexto" class="dato-valor"></span></p>
+                        </div>
                         
-                        <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf"></textarea>
-                        <span id="clienteDireccionTexto" class="texto-pdf"></span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Dirección</label>
+                            <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf"></textarea>
+                            <p class="texto-pdf"><span class="dato-label">Dirección:</span><span id="clienteDireccionTexto" class="dato-valor"></span></p>
+                        </div>
                     </div>
                 </div>
 
@@ -346,19 +355,19 @@
                     </h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Fecha de Emisión</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Fecha de Emisión</label>
                             <input type="date" id="fechaEmision" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <span id="fechaEmisionTexto" class="texto-pdf"></span>
+                            <p class="texto-pdf"><span class="dato-label">Fecha de Emisión:</span><span id="fechaEmisionTexto" class="dato-valor"></span></p>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Fecha de Vencimiento</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Fecha de Vencimiento</label>
                             <input type="date" id="fechaVencimiento" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <span id="fechaVencimientoTexto" class="texto-pdf"></span>
+                            <p class="texto-pdf"><span class="dato-label">Fecha de Vencimiento:</span><span id="fechaVencimientoTexto" class="dato-valor"></span></p>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1 input-pdf">Validez (días)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 input-pdf">Validez (días)</label>
                             <input type="number" id="validezDias" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg input-pdf">
-                            <span id="validezDiasTexto" class="texto-pdf"></span>
+                            <p class="texto-pdf"><span class="dato-label">Validez:</span><span id="validezDiasTexto" class="dato-valor"></span></p>
                         </div>
                     </div>
                 </div>
@@ -421,27 +430,26 @@
                     <div class="space-y-2 text-sm">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-map-pin text-brand-blue"></i>
-                            <span><strong>Lugar de entrega:</strong></span>
+                            <span><strong class="input-pdf">Lugar de entrega:</strong></span>
                             <input type="text" id="lugarEntrega" placeholder="________________" class="flex-1 border-b border-gray-300 outline-none input-pdf">
-                            <span id="lugarEntregaTexto" class="texto-pdf"></span>
+                            <span class="texto-pdf"><strong>Lugar de entrega:</strong> <span id="lugarEntregaTexto"></span></span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-clock text-brand-blue"></i>
-                            <span><strong>Tiempo de entrega:</strong></span>
+                            <span><strong class="input-pdf">Tiempo de entrega:</strong></span>
                             <input type="number" id="tiempoEntrega" value="0" min="0" class="w-16 border-b border-gray-300 outline-none input-pdf">
-                            <span id="tiempoEntregaTexto" class="texto-pdf"></span>
-                            <span>días</span>
+                            <span class="texto-pdf"><strong>Tiempo de entrega:</strong> <span id="tiempoEntregaTexto"></span> días</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-money-bill-wave text-brand-blue"></i>
-                            <span><strong>Forma de pago:</strong></span>
+                            <span><strong class="input-pdf">Forma de pago:</strong></span>
                             <select id="formaPago" class="flex-1 border-b border-gray-300 outline-none input-pdf">
                                 <option value="Contado">Contado</option>
                                 <option value="50% anticipo">50% anticipo</option>
                                 <option value="Crédito">Crédito</option>
                                 <option value="Transferencia">Transferencia</option>
                             </select>
-                            <span id="formaPagoTexto" class="texto-pdf"></span>
+                            <span class="texto-pdf"><strong>Forma de pago:</strong> <span id="formaPagoTexto"></span></span>
                         </div>
                     </div>
                 </div>
@@ -449,7 +457,10 @@
                 <div class="card p-4">
                     <h3 class="text-brand-dark font-bold mb-3">NOTAS ADICIONALES</h3>
                     <textarea id="notasAdicionales" rows="4" placeholder="Observaciones, especificaciones técnicas, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm input-pdf"></textarea>
-                    <span id="notasAdicionalesTexto" class="texto-pdf"></span>
+                    <div class="texto-pdf">
+                        <strong>Notas adicionales:</strong>
+                        <p id="notasAdicionalesTexto" class="mt-1"></p>
+                    </div>
                 </div>
             </div>
 
@@ -522,6 +533,21 @@
                 </button>
             </div>
             <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Logo de la Empresa</label>
+                    <div class="flex items-center space-x-4">
+                        <div id="configLogoPreview" class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            <i class="fas fa-cog text-gray-400 text-3xl"></i>
+                        </div>
+                        <div>
+                            <input type="file" id="configLogoInput" accept="image/*" class="hidden" onchange="cargarLogoDesdeConfig(event)">
+                            <button onclick="document.getElementById('configLogoInput').click()" class="btn bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-upload mr-2"></i>Subir Logo
+                            </button>
+                            <p class="text-xs text-gray-500 mt-1">PNG, JPG o GIF</p>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">NIT</label>
                     <input type="text" id="configNIT" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
@@ -630,7 +656,6 @@
                 <td class="px-3 py-3 text-sm font-mono item-numero">${itemCounter}</td>
                 <td class="px-3 py-3">
                     <input type="number" min="1" value="1" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center input-pdf" oninput="calcularTotales()">
-                    <span class="item-cantidad-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
                     <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded input-pdf" onchange="calcularTotales()">
@@ -640,15 +665,12 @@
                         <option value="Mt">Mt</option>
                         <option value="Serv">Serv</option>
                     </select>
-                    <span class="item-unidad-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
                     <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded input-pdf" placeholder="Descripción del producto/servicio">
-                    <span class="item-descripcion-texto texto-pdf"></span>
                 </td>
                 <td class="px-3 py-3">
                     <input type="number" min="0" step="1" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono input-pdf" value="0" oninput="calcularTotales()">
-                    <span class="item-precio-texto texto-pdf font-mono"></span>
                 </td>
                 <td class="px-3 py-3 text-right font-mono font-semibold item-total">0</td>
                 <td class="px-3 py-3 text-center no-print">
@@ -924,6 +946,9 @@
         }
 
         async function generarPDF() {
+            // Renumerar ítems antes de generar PDF
+            renumerarItems();
+            
             // Actualizar textos antes de generar PDF
             actualizarTextosPDF();
             
@@ -931,14 +956,10 @@
             const pdf = new jsPDF('p', 'mm', 'a4');
             const elemento = document.getElementById('cotizacionForm');
             
-            // Agregar clase para ocultar inputs
-            elemento.classList.add('generando-pdf');
-            
             const elementosOcultar = document.querySelectorAll('.no-print');
             elementosOcultar.forEach(el => el.style.display = 'none');
 
             try {
-                // Esperar un momento para que los cambios se apliquen
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
                 const canvas = await html2canvas(elemento, {
@@ -973,35 +994,32 @@
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
-                // Restaurar
-                elemento.classList.remove('generando-pdf');
                 elementosOcultar.forEach(el => el.style.display = '');
             }
         }
 
         function actualizarTextosPDF() {
-            // Actualizar todos los textos para el PDF
-            document.getElementById('clienteNombreTexto').textContent = document.getElementById('clienteNombre').value;
-            document.getElementById('clienteNITTexto').textContent = document.getElementById('clienteNIT').value;
-            document.getElementById('clienteTelefonoTexto').textContent = document.getElementById('clienteTelefono').value;
-            document.getElementById('clienteDireccionTexto').textContent = document.getElementById('clienteDireccion').value;
-            document.getElementById('fechaEmisionTexto').textContent = document.getElementById('fechaEmision').value;
-            document.getElementById('fechaVencimientoTexto').textContent = document.getElementById('fechaVencimiento').value;
+            // Actualizar datos del cliente
+            document.getElementById('clienteNombreTexto').textContent = document.getElementById('clienteNombre').value || '_________________';
+            document.getElementById('clienteNITTexto').textContent = document.getElementById('clienteNIT').value || '_________________';
+            document.getElementById('clienteTelefonoTexto').textContent = document.getElementById('clienteTelefono').value || '_________________';
+            document.getElementById('clienteDireccionTexto').textContent = document.getElementById('clienteDireccion').value || '_________________';
+            
+            // Actualizar datos de la cotización
+            document.getElementById('fechaEmisionTexto').textContent = document.getElementById('fechaEmision').value || '_________________';
+            document.getElementById('fechaVencimientoTexto').textContent = document.getElementById('fechaVencimiento').value || '_________________';
             document.getElementById('validezDiasTexto').textContent = document.getElementById('validezDias').value + ' días';
+            
+            // Actualizar totales
             document.getElementById('descuentoTexto').textContent = document.getElementById('descuento').value;
-            document.getElementById('lugarEntregaTexto').textContent = document.getElementById('lugarEntrega').value;
+            
+            // Actualizar condiciones
+            document.getElementById('lugarEntregaTexto').textContent = document.getElementById('lugarEntrega').value || '_________________';
             document.getElementById('tiempoEntregaTexto').textContent = document.getElementById('tiempoEntrega').value;
             document.getElementById('formaPagoTexto').textContent = document.getElementById('formaPago').value;
-            document.getElementById('notasAdicionalesTexto').textContent = document.getElementById('notasAdicionales').value;
             
-            // Actualizar items
-            const rows = document.querySelectorAll('#itemsTable tr');
-            rows.forEach(row => {
-                row.querySelector('.item-cantidad-texto').textContent = row.querySelector('.item-cantidad').value;
-                row.querySelector('.item-unidad-texto').textContent = row.querySelector('.item-unidad').value;
-                row.querySelector('.item-descripcion-texto').textContent = row.querySelector('.item-descripcion').value;
-                row.querySelector('.item-precio-texto').textContent = row.querySelector('.item-precio').value;
-            });
+            // Actualizar notas
+            document.getElementById('notasAdicionalesTexto').textContent = document.getElementById('notasAdicionales').value || 'Sin notas adicionales';
         }
 
         async function exportarRespaldo() {
@@ -1073,6 +1091,12 @@
             document.getElementById('configTelefono').value = document.getElementById('empresaTelefono').textContent;
             document.getElementById('configEmail').value = document.getElementById('empresaEmail').textContent;
             document.getElementById('configPropietario').value = document.getElementById('empresaPropietario').textContent;
+            
+            // Cargar logo en el preview de configuración
+            const logoImg = document.getElementById('logoImg');
+            if (!logoImg.classList.contains('hidden')) {
+                document.getElementById('configLogoPreview').innerHTML = `<img src="${logoImg.src}" class="w-full h-full object-contain">`;
+            }
         }
 
         function cerrarConfiguracion() {
@@ -1188,6 +1212,24 @@
             reader.readAsDataURL(file);
         }
 
+        function cargarLogoDesdeConfig(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const logoData = e.target.result;
+                document.getElementById('logoImg').src = logoData;
+                document.getElementById('logoImg').classList.remove('hidden');
+                document.getElementById('logoPlaceholder').classList.add('hidden');
+                document.getElementById('logoPreview').innerHTML = `<img src="${logoData}" class="w-full h-full object-contain">`;
+                document.getElementById('configLogoPreview').innerHTML = `<img src="${logoData}" class="w-full h-full object-contain">`;
+                guardarLogo(logoData);
+                showToast('Logo actualizado correctamente');
+            };
+            reader.readAsDataURL(file);
+        }
+
         async function guardarLogo(logoData) {
             try {
                 const transaction = db.transaction([CONFIG_STORE], 'readwrite');
@@ -1253,7 +1295,7 @@
                         console.log('✅ Service Worker registrado:', registration.scope);
                     })
                     .catch((error) => {
-                        console.log(' Error al registrar Service Worker:', error);
+                        console.log('❌ Error al registrar Service Worker:', error);
                     });
             });
         }
