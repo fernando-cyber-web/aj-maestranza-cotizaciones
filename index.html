@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Cotizaciones - AJ. Maestranza Industrial">
+    <meta name="theme-color" content="#0d3b66">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AJ Cotizaciones">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <title>AJ. Maestranza Industrial - Sistema de Cotizaciones</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- jsPDF para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#1a6fc4',
+                        'brand-dark': '#0d3b66',
+                        'brand-gray': '#6b7c8f',
+                        'brand-light': '#f0f4f8',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'mono': ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        /* Animaciones suaves */
+        .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        /* Tabla limpia */
+        .table-row {
+            transition: background-color 0.2s;
+        }
+        
+        .table-row:hover {
+            background-color: #f7fafc;
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            transition: all 0.2s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1a6fc4;
+            box-shadow: 0 0 0 3px rgba(26, 111, 196, 0.1);
+        }
+
+        /* ESTILOS DE IMPRESIÓN - Blanco y Negro Optimizado */
+        @media print {
+            body {
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .print-header {
+                border-bottom: 2px solid #000;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            .print-title {
+                color: #000;
+                font-weight: 700;
+                font-size: 24px;
+            }
+
+            .print-subtitle {
+                color: #333;
+                font-size: 12px;
+            }
+
+            .print-table th {
+                background-color: #f0f0f0 !important;
+                color: #000;
+                border-bottom: 2px solid #000;
+                font-weight: 600;
+            }
+
+            .print-table td {
+                border-bottom: 1px solid #ddd;
+                color: #000;
+            }
+
+            .print-total {
+                border-top: 2px solid #000;
+                font-weight: 700;
+                font-size: 18px;
+            }
+
+            .print-section {
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+
+            .print-line {
+                border-bottom: 1px solid #000;
+                margin: 10px 0;
+            }
+
+            /* Forzar B/N en impresión */
+            * {
+                color: #000 !important;
+                background: transparent !important;
+            }
+
+            .logo-print {
+                filter: grayscale(100%);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header de la App -->
+    <header class="bg-brand-dark text-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div id="logoPreview" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                        <i class="fas fa-cog text-brand-dark text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">AJ. MAESTRANZA INDUSTRIAL</h1>
+                        <p class="text-sm text-gray-300">Sistema de Cotizaciones</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button onclick="nuevaCotizacion()" class="btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Nueva</span>
+                    </button>
+                    <button onclick="abrirBuscador()" class="btn bg-brand-gray hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-search"></i>
+                        <span>Buscar</span>
+                    </button>
+                    <button onclick="exportarRespaldo()" class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Respaldo</span>
+                    </button>
+                    <button onclick="importarRespaldo()" class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span>Importar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="container mx-auto px-4 py-6">
+        
+        <!-- Formulario de Cotización -->
+        <div id="cotizacionForm" class="print-container max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+            
+            <!-- Encabezado -->
+            <div class="print-header border-b-4 border-brand-blue pb-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start">
+                    <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                        <div id="logoContainer" class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden logo-print">
+                            <i class="fas fa-cog text-brand-dark text-4xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="print-title text-2xl md:text-3xl font-bold text-brand-dark">AJ. MAESTRANZA INDUSTRIAL S.R.L.</h2>
+                            <p class="print-subtitle text-gray-600">Tornería y Servicios Industriales</p>
+                            <p class="text-sm text-brand-blue font-medium mt-1">"CALIDAD Y GARANTÍA PARA SU TRABAJO"</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="bg-brand-light rounded-lg px-4 py-2 inline-block">
+                            <p class="text-sm text-gray-600">PROFORMA N°</p>
+                            <p class="text-3xl font-bold text-brand-dark font-mono" id="numeroProforma">#001</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Datos de la empresa -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                        <p><i class="fas fa-id-card mr-2"></i>NIT: <strong>5821374015</strong></p>
+                        <p><i class="fas fa-map-marker-alt mr-2"></i>Urbanización el Bibosi, Av. principal 200 mts. de la carretera</p>
+                        <p><i class="fas fa-city mr-2"></i>Santa Cruz - Bolivia</p>
+                    </div>
+                    <div class="text-right md:text-left">
+                        <p><i class="fas fa-phone mr-2"></i>72613751 / 76686673</p>
+                        <p><i class="fas fa-envelope mr-2"></i>Adalid37rojas@hotmail.com</p>
+                        <p class="mt-2"><strong>Propietario:</strong> Adalid Rojas C.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos de la Cotización -->
+            <div class="print-section grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="card p-4">
+                    <h3 class="text-brand-dark font-bold mb-3 flex items-center">
+                        <i class="fas fa-user mr-2"></i> DATOS DEL CLIENTE
+                    </h3>
+                    <div class="space-y-3">
+                        <input type="text" id="clienteNombre" placeholder="Nombre / Razón Social" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        <input type="text" id="clienteNIT" placeholder="NIT / CI" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        <input type="tel" id="clienteTelefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        <textarea id="clienteDireccion" placeholder="Dirección" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue"></textarea>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-brand-dark font-bold mb-3 flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i> DATOS DE LA COTIZACIÓN
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Fecha de Emisión</label>
+                            <input type="date" id="fechaEmision" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Fecha de Vencimiento</label>
+                            <input type="date" id="fechaVencimiento" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Validez (días)</label>
+                            <input type="number" id="validezDias" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Items -->
+            <div class="print-section mb-6">
+                <h3 class="text-brand-dark font-bold mb-3 flex items-center">
+                    <i class="fas fa-list mr-2"></i> DETALLE DE LA COTIZACIÓN
+                </h3>
+                
+                <div class="table-container overflow-x-auto">
+                    <table class="print-table w-full">
+                        <thead class="bg-brand-dark text-white">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-semibold">ÍTEM</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold">CANT.</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold">UNIDAD</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold">DESCRIPCIÓN</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold">P. UNIT. (Bs)</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold">TOTAL (Bs)</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold no-print">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTable">
+                            <!-- Los items se agregan dinámicamente -->
+                        </tbody>
+                        <tfoot class="bg-brand-light">
+                            <tr>
+                                <td colspan="5" class="px-3 py-2 text-right font-semibold text-brand-dark">SUBTOTAL:</td>
+                                <td class="px-3 py-2 text-right font-mono font-semibold" id="subtotal">0.00</td>
+                                <td class="no-print"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-3 py-2 text-right font-semibold text-brand-dark">DESCUENTO:</td>
+                                <td class="px-3 py-2 text-right">
+                                    <input type="number" id="descuento" value="0" min="0" class="w-24 px-2 py-1 text-right border border-gray-300 rounded font-mono" onchange="calcularTotales()">
+                                </td>
+                                <td class="no-print"></td>
+                            </tr>
+                            <tr class="print-total">
+                                <td colspan="5" class="px-3 py-4 text-right font-bold text-brand-dark text-lg">TOTAL:</td>
+                                <td class="px-3 py-4 text-right font-mono font-bold text-brand-dark text-2xl" id="totalFinal">0.00</td>
+                                <td class="no-print"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <button onclick="agregarItem()" class="no-print mt-4 btn bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Agregar Ítem</span>
+                </button>
+            </div>
+
+            <!-- Condiciones y Notas -->
+            <div class="print-section grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="card p-4">
+                    <h3 class="text-brand-dark font-bold mb-3">CONDICIONES</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-map-pin text-brand-blue"></i>
+                            <span><strong>Lugar de entrega:</strong></span>
+                            <input type="text" id="lugarEntrega" placeholder="________________" class="flex-1 border-b border-gray-300 focus:border-brand-blue outline-none">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-clock text-brand-blue"></i>
+                            <span><strong>Tiempo de entrega:</strong></span>
+                            <input type="number" id="tiempoEntrega" value="0" min="0" class="w-16 border-b border-gray-300 focus:border-brand-blue outline-none">
+                            <span>días</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-money-bill-wave text-brand-blue"></i>
+                            <span><strong>Forma de pago:</strong></span>
+                            <select id="formaPago" class="flex-1 border-b border-gray-300 focus:border-brand-blue outline-none">
+                                <option value="Contado">Contado</option>
+                                <option value="50% anticipo">50% anticipo</option>
+                                <option value="Crédito">Crédito</option>
+                                <option value="Transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-brand-dark font-bold mb-3">NOTAS ADICIONALES</h3>
+                    <textarea id="notasAdicionales" rows="4" placeholder="Observaciones, especificaciones técnicas, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brand-blue text-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- Firmas -->
+            <div class="print-section mt-8 pt-8 border-t-2 border-gray-300">
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="text-center">
+                        <div class="print-line mb-2"></div>
+                        <p class="text-sm font-semibold text-brand-dark">FIRMA Y SELLO PROVEEDOR</p>
+                        <p class="text-xs text-gray-600 mt-1">AJ. Maestranza Industrial S.R.L.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="print-line mb-2"></div>
+                        <p class="text-sm font-semibold text-brand-dark">FIRMA CLIENTE</p>
+                        <p class="text-xs text-gray-600 mt-1" id="firmaClienteNombre">_________________________</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de página -->
+            <div class="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-600">
+                <p><strong>NOTA:</strong> Será tema de exclusión el correcto llenado del formulario</p>
+                <p class="mt-1">Documento generado el <span id="fechaGeneracion"></span></p>
+            </div>
+        </div>
+
+        <!-- Botones de Acción Flotantes -->
+        <div class="no-print fixed bottom-6 right-6 flex flex-col space-y-3">
+            <button onclick="guardarCotizacion()" class="btn bg-green-600 hover:bg-green-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Guardar Cotización">
+                <i class="fas fa-save text-xl"></i>
+            </button>
+            <button onclick="generarPDF()" class="btn bg-brand-dark hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Generar PDF">
+                <i class="fas fa-file-pdf text-xl"></i>
+            </button>
+            <button onclick="clonarCotizacion()" class="btn bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Clonar Última Cotización">
+                <i class="fas fa-copy text-xl"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Modal de Búsqueda -->
+    <div id="modalBuscador" class="no-print fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div class="bg-brand-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-bold"><i class="fas fa-search mr-2"></i>Buscar Cotizaciones</h3>
+                <button onclick="cerrarBuscador()" class="text-white hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 flex space-x-2">
+                    <input type="text" id="busquedaTexto" placeholder="Buscar por cliente, NIT o número..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                    <button onclick="buscarCotizaciones()" class="btn bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div id="resultadosBusqueda" class="overflow-y-auto max-h-96 space-y-2">
+                    <!-- Resultados dinámicos -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input file oculto para importar -->
+    <input type="file" id="fileImport" accept=".json" class="hidden" onchange="procesarImportacion(event)">
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="no-print fixed top-4 right-4 bg-brand-dark text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // ==================== INDEXED DB ====================
+        const DB_NAME = 'AJMaestranzaDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'cotizaciones';
+        let db;
+
+        // Inicializar IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('numero', 'numero', { unique: true });
+                        store.createIndex('cliente', 'cliente', { unique: false });
+                        store.createIndex('fecha', 'fecha', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // ==================== FUNCIONES PRINCIPALES ====================
+        
+        let itemCounter = 0;
+        let currentId = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            establecerFechas();
+            agregarItem(); // Agregar primer item por defecto
+            cargarUltimoNumero();
+            document.getElementById('fechaGeneracion').textContent = new Date().toLocaleDateString('es-BO');
+        });
+
+        function establecerFechas() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaEmision').value = hoy;
+            
+            const vencimiento = new Date();
+            vencimiento.setDate(vencimiento.getDate() + 10);
+            document.getElementById('fechaVencimiento').value = vencimiento.toISOString().split('T')[0];
+        }
+
+        function agregarItem() {
+            itemCounter++;
+            const tbody = document.getElementById('itemsTable');
+            const row = document.createElement('tr');
+            row.className = 'table-row border-b border-gray-200';
+            row.id = `item-${itemCounter}`;
+            
+            row.innerHTML = `
+                <td class="px-3 py-3 text-sm font-mono">${itemCounter}</td>
+                <td class="px-3 py-3">
+                    <input type="number" min="1" value="1" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center" onchange="calcularTotales()">
+                </td>
+                <td class="px-3 py-3">
+                    <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded">
+                        <option value="Pzas">Pzas</option>
+                        <option value="Unid">Unid</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Mt">Mt</option>
+                        <option value="Serv">Serv</option>
+                    </select>
+                </td>
+                <td class="px-3 py-3">
+                    <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded" placeholder="Descripción del producto/servicio">
+                </td>
+                <td class="px-3 py-3">
+                    <input type="number" min="0" step="0.01" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono" value="0" onchange="calcularTotales()">
+                </td>
+                <td class="px-3 py-3 text-right font-mono font-semibold item-total">0.00</td>
+                <td class="px-3 py-3 text-center no-print">
+                    <button onclick="eliminarItem(${itemCounter})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+
+        function eliminarItem(id) {
+            const row = document.getElementById(`item-${id}`);
+            if (row) {
+                row.remove();
+                renumerarItems();
+                calcularTotales();
+            }
+        }
+
+        function renumerarItems() {
+            const rows = document.querySelectorAll('#itemsTable tr');
+            rows.forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        }
+
+        function calcularTotales() {
+            let subtotal = 0;
+            const rows = document.querySelectorAll('#itemsTable tr');
+            
+            rows.forEach(row => {
+                const cantidad = parseFloat(row.querySelector('.item-cantidad').value) || 0;
+                const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
+                const total = cantidad * precio;
+                
+                row.querySelector('.item-total').textContent = total.toFixed(2);
+                subtotal += total;
+            });
+
+            const descuento = parseFloat(document.getElementById('descuento').value) || 0;
+            const total = subtotal - descuento;
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('totalFinal').textContent = total.toFixed(2);
+        }
+
+        // ==================== GUARDAR / CARGAR ====================
+
+        async function guardarCotizacion() {
+            try {
+                const cotizacion = obtenerDatosCotizacion();
+                
+                if (!cotizacion.cliente || cotizacion.items.length === 0) {
+                    showToast('Complete los datos del cliente y al menos un ítem', 'error');
+                    return;
+                }
+
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+
+                if (currentId) {
+                    cotizacion.id = currentId;
+                    await store.put(cotizacion);
+                    showToast('Cotización actualizada correctamente');
+                } else {
+                    await store.add(cotizacion);
+                    showToast('Cotización guardada correctamente');
+                }
+
+                currentId = null;
+                cargarUltimoNumero();
+                
+            } catch (error) {
+                console.error('Error al guardar:', error);
+                showToast('Error al guardar la cotización', 'error');
+            }
+        }
+
+        function obtenerDatosCotizacion() {
+            const items = [];
+            document.querySelectorAll('#itemsTable tr').forEach(row => {
+                items.push({
+                    cantidad: parseInt(row.querySelector('.item-cantidad').value) || 0,
+                    unidad: row.querySelector('.item-unidad').value,
+                    descripcion: row.querySelector('.item-descripcion').value,
+                    precio: parseFloat(row.querySelector('.item-precio').value) || 0,
+                    total: parseFloat(row.querySelector('.item-total').textContent) || 0
+                });
+            });
+
+            return {
+                numero: document.getElementById('numeroProforma').textContent.replace('#', ''),
+                fecha: document.getElementById('fechaEmision').value,
+                vencimiento: document.getElementById('fechaVencimiento').value,
+                validez: parseInt(document.getElementById('validezDias').value) || 10,
+                cliente: document.getElementById('clienteNombre').value,
+                nit: document.getElementById('clienteNIT').value,
+                telefono: document.getElementById('clienteTelefono').value,
+                direccion: document.getElementById('clienteDireccion').value,
+                items: items,
+                subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
+                descuento: parseFloat(document.getElementById('descuento').value) || 0,
+                total: parseFloat(document.getElementById('totalFinal').textContent) || 0,
+                lugarEntrega: document.getElementById('lugarEntrega').value,
+                tiempoEntrega: parseInt(document.getElementById('tiempoEntrega').value) || 0,
+                formaPago: document.getElementById('formaPago').value,
+                notas: document.getElementById('notasAdicionales').value,
+                fechaCreacion: new Date().toISOString()
+            };
+        }
+
+        async function cargarUltimoNumero() {
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('numero');
+                const request = index.openCursor(null, 'prev');
+
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        const ultimoNumero = parseInt(cursor.value.numero);
+                        document.getElementById('numeroProforma').textContent = '#' + String(ultimoNumero + 1).padStart(3, '0');
+                    } else {
+                        document.getElementById('numeroProforma').textContent = '#001';
+                    }
+                };
+            } catch (error) {
+                console.error('Error al cargar número:', error);
+            }
+        }
+
+        // ==================== BUSCAR / CLONAR ====================
+
+        function abrirBuscador() {
+            document.getElementById('modalBuscador').classList.remove('hidden');
+            buscarCotizaciones();
+        }
+
+        function cerrarBuscador() {
+            document.getElementById('modalBuscador').classList.add('hidden');
+        }
+
+        async function buscarCotizaciones() {
+            const texto = document.getElementById('busquedaTexto').value.toLowerCase();
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const resultados = request.result.filter(c => 
+                    c.cliente.toLowerCase().includes(texto) ||
+                    c.nit.includes(texto) ||
+                    c.numero.includes(texto)
+                );
+                
+                mostrarResultados(resultados);
+            };
+        }
+
+        function mostrarResultados(cotizaciones) {
+            const container = document.getElementById('resultadosBusqueda');
+            container.innerHTML = '';
+
+            if (cotizaciones.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-4">No se encontraron cotizaciones</p>';
+                return;
+            }
+
+            cotizaciones.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+
+            cotizaciones.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'card p-4 cursor-pointer hover:shadow-md';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-brand-dark">Proforma #${c.numero}</p>
+                            <p class="text-sm text-gray-600">${c.cliente}</p>
+                            <p class="text-xs text-gray-500">${new Date(c.fecha).toLocaleDateString('es-BO')}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono font-bold text-brand-blue">Bs ${c.total.toFixed(2)}</p>
+                            <div class="flex space-x-2 mt-2">
+                                <button onclick="cargarCotizacion(${c.id})" class="text-blue-600 hover:text-blue-800 text-sm">
+                                    <i class="fas fa-edit"></i> Cargar
+                                </button>
+                                <button onclick="clonarCotizacionID(${c.id})" class="text-green-600 hover:text-green-800 text-sm">
+                                    <i class="fas fa-copy"></i> Clonar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function cargarCotizacion(id) {
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(id);
+
+                request.onsuccess = () => {
+                    const c = request.result;
+                    if (c) {
+                        document.getElementById('numeroProforma').textContent = '#' + c.numero;
+                        document.getElementById('fechaEmision').value = c.fecha;
+                        document.getElementById('fechaVencimiento').value = c.vencimiento;
+                        document.getElementById('validezDias').value = c.validez;
+                        document.getElementById('clienteNombre').value = c.cliente;
+                        document.getElementById('clienteNIT').value = c.nit;
+                        document.getElementById('clienteTelefono').value = c.telefono;
+                        document.getElementById('clienteDireccion').value = c.direccion;
+                        document.getElementById('lugarEntrega').value = c.lugarEntrega || '';
+                        document.getElementById('tiempoEntrega').value = c.tiempoEntrega || 0;
+                        document.getElementById('formaPago').value = c.formaPago;
+                        document.getElementById('notasAdicionales').value = c.notas || '';
+                        
+                        // Limpiar y cargar items
+                        document.getElementById('itemsTable').innerHTML = '';
+                        itemCounter = 0;
+                        c.items.forEach(item => {
+                            itemCounter++;
+                            const tbody = document.getElementById('itemsTable');
+                            const row = document.createElement('tr');
+                            row.className = 'table-row border-b border-gray-200';
+                            row.id = `item-${itemCounter}`;
+                            row.innerHTML = `
+                                <td class="px-3 py-3 text-sm font-mono">${itemCounter}</td>
+                                <td class="px-3 py-3">
+                                    <input type="number" min="1" value="${item.cantidad}" class="item-cantidad w-16 px-2 py-1 border border-gray-300 rounded text-center" onchange="calcularTotales()">
+                                </td>
+                                <td class="px-3 py-3">
+                                    <select class="item-unidad w-full px-2 py-1 border border-gray-300 rounded">
+                                        <option value="Pzas" ${item.unidad === 'Pzas' ? 'selected' : ''}>Pzas</option>
+                                        <option value="Unid" ${item.unidad === 'Unid' ? 'selected' : ''}>Unid</option>
+                                        <option value="Kg" ${item.unidad === 'Kg' ? 'selected' : ''}>Kg</option>
+                                        <option value="Mt" ${item.unidad === 'Mt' ? 'selected' : ''}>Mt</option>
+                                        <option value="Serv" ${item.unidad === 'Serv' ? 'selected' : ''}>Serv</option>
+                                    </select>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <input type="text" class="item-descripcion w-full px-2 py-1 border border-gray-300 rounded" value="${item.descripcion}" placeholder="Descripción del producto/servicio">
+                                </td>
+                                <td class="px-3 py-3">
+                                    <input type="number" min="0" step="0.01" class="item-precio w-24 px-2 py-1 border border-gray-300 rounded text-right font-mono" value="${item.precio}" onchange="calcularTotales()">
+                                </td>
+                                <td class="px-3 py-3 text-right font-mono font-semibold item-total">${item.total.toFixed(2)}</td>
+                                <td class="px-3 py-3 text-center no-print">
+                                    <button onclick="eliminarItem(${itemCounter})" class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                        
+                        document.getElementById('descuento').value = c.descuento || 0;
+                        calcularTotales();
+                        currentId = c.id;
+                        
+                        cerrarBuscador();
+                        showToast('Cotización cargada correctamente');
+                    }
+                };
+            } catch (error) {
+                console.error('Error al cargar:', error);
+                showToast('Error al cargar la cotización', 'error');
+            }
+        }
+
+        function clonarCotizacionID(id) {
+            cargarCotizacion(id).then(() => {
+                currentId = null;
+                const numActual = parseInt(document.getElementById('numeroProforma').textContent.replace('#', ''));
+                document.getElementById('numeroProforma').textContent = '#' + String(numActual + 1).padStart(3, '0');
+                showToast('Cotización clonada. Modifique fecha y precios si es necesario.');
+            });
+        }
+
+        function clonarCotizacion() {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index('numero');
+            const request = index.openCursor(null, 'prev');
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    cargarCotizacion(cursor.value.id).then(() => {
+                        currentId = null;
+                        const numActual = parseInt(document.getElementById('numeroProforma').textContent.replace('#', ''));
+                        document.getElementById('numeroProforma').textContent = '#' + String(numActual + 1).padStart(3, '0');
+                        showToast('Última cotización clonada');
+                    });
+                } else {
+                    showToast('No hay cotizaciones para clonar', 'error');
+                }
+            };
+        }
+
+        // ==================== PDF ====================
+
+        async function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const elemento = document.getElementById('cotizacionForm');
+            
+            // Ocultar elementos no imprimibles temporalmente
+            const elementosOcultar = document.querySelectorAll('.no-print');
+            elementosOcultar.forEach(el => el.style.display = 'none');
+
+            try {
+                const canvas = await html2canvas(elemento, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.save(`Proforma_${document.getElementById('numeroProforma').textContent.replace('#', '')}.pdf`);
+                
+                showToast('PDF generado correctamente');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showToast('Error al generar PDF', 'error');
+            } finally {
+                // Restaurar elementos
+                elementosOcultar.forEach(el => el.style.display = '');
+            }
+        }
+
+        // ==================== EXPORTAR / IMPORTAR ====================
+
+        async function exportarRespaldo() {
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const data = request.result;
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `respaldo_cotizaciones_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('Respaldo exportado correctamente');
+                };
+            } catch (error) {
+                console.error('Error al exportar:', error);
+                showToast('Error al exportar respaldo', 'error');
+            }
+        }
+
+        function importarRespaldo() {
+            document.getElementById('fileImport').click();
+        }
+
+        async function procesarImportacion(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                if (!Array.isArray(data)) {
+                    throw new Error('Formato de archivo inválido');
+                }
+
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+
+                let count = 0;
+                for (const cotizacion of data) {
+                    await store.add(cotizacion);
+                    count++;
+                }
+
+                showToast(`${count} cotizaciones importadas correctamente`);
+                await cargarUltimoNumero();
+            } catch (error) {
+                console.error('Error al importar:', error);
+                showToast('Error al importar: ' + error.message, 'error');
+            }
+
+            event.target.value = '';
+        }
+
+        // ==================== UTILIDADES ====================
+
+        function nuevaCotizacion() {
+            if (confirm('¿Está seguro de crear una nueva cotización? Los datos no guardados se perderán.')) {
+                location.reload();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+                type === 'error' ? 'bg-red-600' : 'bg-brand-dark'
+            } text-white`;
+            
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // Actualizar nombre en firma cuando se ingresa cliente
+        document.getElementById('clienteNombre').addEventListener('input', function() {
+            document.getElementById('firmaClienteNombre').textContent = this.value || '_________________________';
+        });
+    </script>
+
+    <!-- Registro del Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
