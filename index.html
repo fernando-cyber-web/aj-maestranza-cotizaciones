@@ -57,7 +57,6 @@
             font-family: 'Roboto Mono', monospace;
         }
 
-        /* Animaciones suaves */
         .btn {
             transition: all 0.3s ease;
         }
@@ -78,7 +77,6 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.12);
         }
 
-        /* Tabla limpia */
         .table-row {
             transition: background-color 0.2s;
         }
@@ -87,7 +85,6 @@
             background-color: #f7fafc;
         }
 
-        /* Input styling */
         input, select, textarea {
             transition: all 0.2s;
         }
@@ -98,7 +95,7 @@
             box-shadow: 0 0 0 3px rgba(26, 111, 196, 0.1);
         }
 
-        /* ESTILOS DE IMPRESIÓN - Blanco y Negro Optimizado */
+        /* ESTILOS DE IMPRESIÓN */
         @media print {
             body {
                 background: white;
@@ -163,7 +160,6 @@
                 margin: 10px 0;
             }
 
-            /* Forzar B/N en impresión */
             * {
                 color: #000 !important;
                 background: transparent !important;
@@ -174,7 +170,6 @@
             }
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .table-container {
                 overflow-x: auto;
@@ -188,6 +183,31 @@
                 width: 100%;
                 margin-bottom: 8px;
             }
+        }
+
+        /* Logo container */
+        .logo-container {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .logo-container:hover::after {
+            content: 'Click para cambiar';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            padding: 2px;
+        }
+
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
     </style>
 </head>
@@ -223,6 +243,10 @@
                         <i class="fas fa-upload"></i>
                         <span>Importar</span>
                     </button>
+                    <button onclick="abrirConfiguracion()" class="btn bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-cog"></i>
+                        <span>Config</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -238,9 +262,11 @@
             <div class="print-header border-b-4 border-brand-blue pb-6 mb-6">
                 <div class="flex flex-col md:flex-row justify-between items-start">
                     <div class="flex items-center space-x-4 mb-4 md:mb-0">
-                        <div id="logoContainer" class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden logo-print">
-                            <i class="fas fa-cog text-brand-dark text-4xl"></i>
+                        <div id="logoContainer" class="logo-container w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden logo-print" onclick="document.getElementById('logoInput').click()">
+                            <img id="logoImg" class="logo-img hidden" alt="Logo">
+                            <i id="logoPlaceholder" class="fas fa-cog text-brand-dark text-4xl"></i>
                         </div>
+                        <input type="file" id="logoInput" accept="image/*" class="hidden" onchange="cargarLogo(event)">
                         <div>
                             <h2 class="print-title text-2xl md:text-3xl font-bold text-brand-dark">AJ. MAESTRANZA INDUSTRIAL S.R.L.</h2>
                             <p class="print-subtitle text-gray-600">Tornería y Servicios Industriales</p>
@@ -258,14 +284,14 @@
                 <!-- Datos de la empresa -->
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                     <div>
-                        <p><i class="fas fa-id-card mr-2"></i>NIT: <strong>5821374015</strong></p>
-                        <p><i class="fas fa-map-marker-alt mr-2"></i>Urbanización el Bibosi, Av. principal 200 mts. de la carretera</p>
-                        <p><i class="fas fa-city mr-2"></i>Santa Cruz - Bolivia</p>
+                        <p><i class="fas fa-id-card mr-2"></i>NIT: <strong id="empresaNIT">5821374015</strong></p>
+                        <p><i class="fas fa-map-marker-alt mr-2"></i><span id="empresaDireccion">Urbanización el Bibosi, Av. principal 200 mts. de la carretera</span></p>
+                        <p><i class="fas fa-city mr-2"></i><span id="empresaCiudad">Santa Cruz - Bolivia</span></p>
                     </div>
                     <div class="text-right md:text-left">
-                        <p><i class="fas fa-phone mr-2"></i>72613751 / 76686673</p>
-                        <p><i class="fas fa-envelope mr-2"></i>Adalid37rojas@hotmail.com</p>
-                        <p class="mt-2"><strong>Propietario:</strong> Adalid Rojas C.</p>
+                        <p><i class="fas fa-phone mr-2"></i><span id="empresaTelefono">72613751 / 76686673</span></p>
+                        <p><i class="fas fa-envelope mr-2"></i><span id="empresaEmail">Adalid37rojas@hotmail.com</span></p>
+                        <p class="mt-2"><strong>Propietario:</strong> <span id="empresaPropietario">Adalid Rojas C.</span></p>
                     </div>
                 </div>
             </div>
@@ -439,13 +465,56 @@
             </div>
             <div class="p-6">
                 <div class="mb-4 flex space-x-2">
-                    <input type="text" id="busquedaTexto" placeholder="Buscar por cliente, NIT o número..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-brand-blue">
+                    <input type="text" id="busquedaTexto" placeholder="Buscar por cliente, NIT o número..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-brand-blue" onkeyup="if(event.key === 'Enter') buscarCotizaciones()">
                     <button onclick="buscarCotizaciones()" class="btn bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
                 <div id="resultadosBusqueda" class="overflow-y-auto max-h-96 space-y-2">
                     <!-- Resultados dinámicos -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración -->
+    <div id="modalConfig" class="no-print fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="bg-brand-dark text-white px-6 py-4 flex justify-between items-center sticky top-0">
+                <h3 class="text-xl font-bold"><i class="fas fa-cog mr-2"></i>Configuración de la Empresa</h3>
+                <button onclick="cerrarConfiguracion()" class="text-white hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NIT</label>
+                    <input type="text" id="configNIT" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                    <input type="text" id="configDireccion" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                    <input type="text" id="configCiudad" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="text" id="configTelefono" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="configEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
+                    <input type="text" id="configPropietario" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div class="pt-4">
+                    <button onclick="guardarConfiguracion()" class="btn bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full">
+                        <i class="fas fa-save mr-2"></i>Guardar Configuración
+                    </button>
                 </div>
             </div>
         </div>
@@ -462,11 +531,11 @@
     <script>
         // ==================== INDEXED DB ====================
         const DB_NAME = 'AJMaestranzaDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 2;
         const STORE_NAME = 'cotizaciones';
+        const CONFIG_STORE = 'configuracion';
         let db;
 
-        // Inicializar IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -479,11 +548,16 @@
 
                 request.onupgradeneeded = (event) => {
                     const database = event.target.result;
+                    
                     if (!database.objectStoreNames.contains(STORE_NAME)) {
                         const store = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                        store.createIndex('numero', 'numero', { unique: true });
+                        store.createIndex('numero', 'numero', { unique: false });
                         store.createIndex('cliente', 'cliente', { unique: false });
                         store.createIndex('fecha', 'fecha', { unique: false });
+                    }
+                    
+                    if (!database.objectStoreNames.contains(CONFIG_STORE)) {
+                        database.createObjectStore(CONFIG_STORE, { keyPath: 'key' });
                     }
                 };
             });
@@ -494,12 +568,13 @@
         let itemCounter = 0;
         let currentId = null;
 
-        // Inicialización
         document.addEventListener('DOMContentLoaded', async () => {
             await initDB();
             establecerFechas();
-            agregarItem(); // Agregar primer item por defecto
+            agregarItem();
             cargarUltimoNumero();
+            cargarConfiguracion();
+            cargarLogoGuardado();
             document.getElementById('fechaGeneracion').textContent = new Date().toLocaleDateString('es-BO');
         });
 
@@ -602,15 +677,17 @@
 
                 if (currentId) {
                     cotizacion.id = currentId;
-                    await store.put(cotizacion);
+                    store.put(cotizacion);
                     showToast('Cotización actualizada correctamente');
                 } else {
-                    await store.add(cotizacion);
+                    store.add(cotizacion);
                     showToast('Cotización guardada correctamente');
                 }
 
-                currentId = null;
-                cargarUltimoNumero();
+                transaction.oncomplete = () => {
+                    currentId = null;
+                    cargarUltimoNumero();
+                };
                 
             } catch (error) {
                 console.error('Error al guardar:', error);
@@ -692,7 +769,7 @@
             request.onsuccess = () => {
                 const resultados = request.result.filter(c => 
                     c.cliente.toLowerCase().includes(texto) ||
-                    c.nit.includes(texto) ||
+                    (c.nit && c.nit.toLowerCase().includes(texto)) ||
                     c.numero.includes(texto)
                 );
                 
@@ -752,15 +829,14 @@
                         document.getElementById('fechaVencimiento').value = c.vencimiento;
                         document.getElementById('validezDias').value = c.validez;
                         document.getElementById('clienteNombre').value = c.cliente;
-                        document.getElementById('clienteNIT').value = c.nit;
-                        document.getElementById('clienteTelefono').value = c.telefono;
-                        document.getElementById('clienteDireccion').value = c.direccion;
+                        document.getElementById('clienteNIT').value = c.nit || '';
+                        document.getElementById('clienteTelefono').value = c.telefono || '';
+                        document.getElementById('clienteDireccion').value = c.direccion || '';
                         document.getElementById('lugarEntrega').value = c.lugarEntrega || '';
                         document.getElementById('tiempoEntrega').value = c.tiempoEntrega || 0;
                         document.getElementById('formaPago').value = c.formaPago;
                         document.getElementById('notasAdicionales').value = c.notas || '';
                         
-                        // Limpiar y cargar items
                         document.getElementById('itemsTable').innerHTML = '';
                         itemCounter = 0;
                         c.items.forEach(item => {
@@ -850,7 +926,6 @@
             const pdf = new jsPDF('p', 'mm', 'a4');
             const elemento = document.getElementById('cotizacionForm');
             
-            // Ocultar elementos no imprimibles temporalmente
             const elementosOcultar = document.querySelectorAll('.no-print');
             elementosOcultar.forEach(el => el.style.display = 'none');
 
@@ -858,22 +933,35 @@
                 const canvas = await html2canvas(elemento, {
                     scale: 2,
                     useCORS: true,
-                    logging: false
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: elemento.scrollWidth,
+                    windowHeight: elemento.scrollHeight
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 210;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= 297;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= 297;
+                }
+
                 pdf.save(`Proforma_${document.getElementById('numeroProforma').textContent.replace('#', '')}.pdf`);
-                
                 showToast('PDF generado correctamente');
             } catch (error) {
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF', 'error');
             } finally {
-                // Restaurar elementos
                 elementosOcultar.forEach(el => el.style.display = '');
             }
         }
@@ -924,18 +1012,139 @@
 
                 let count = 0;
                 for (const cotizacion of data) {
-                    await store.add(cotizacion);
+                    delete cotizacion.id;
+                    store.add(cotizacion);
                     count++;
                 }
 
-                showToast(`${count} cotizaciones importadas correctamente`);
-                await cargarUltimoNumero();
+                transaction.oncomplete = () => {
+                    showToast(`${count} cotizaciones importadas correctamente`);
+                    cargarUltimoNumero();
+                };
             } catch (error) {
                 console.error('Error al importar:', error);
                 showToast('Error al importar: ' + error.message, 'error');
             }
 
             event.target.value = '';
+        }
+
+        // ==================== CONFIGURACIÓN ====================
+
+        function abrirConfiguracion() {
+            document.getElementById('modalConfig').classList.remove('hidden');
+            document.getElementById('configNIT').value = document.getElementById('empresaNIT').textContent;
+            document.getElementById('configDireccion').value = document.getElementById('empresaDireccion').textContent;
+            document.getElementById('configCiudad').value = document.getElementById('empresaCiudad').textContent;
+            document.getElementById('configTelefono').value = document.getElementById('empresaTelefono').textContent;
+            document.getElementById('configEmail').value = document.getElementById('empresaEmail').textContent;
+            document.getElementById('configPropietario').value = document.getElementById('empresaPropietario').textContent;
+        }
+
+        function cerrarConfiguracion() {
+            document.getElementById('modalConfig').classList.add('hidden');
+        }
+
+        async function guardarConfiguracion() {
+            const config = {
+                key: 'empresa',
+                nit: document.getElementById('configNIT').value,
+                direccion: document.getElementById('configDireccion').value,
+                ciudad: document.getElementById('configCiudad').value,
+                telefono: document.getElementById('configTelefono').value,
+                email: document.getElementById('configEmail').value,
+                propietario: document.getElementById('configPropietario').value
+            };
+
+            try {
+                const transaction = db.transaction([CONFIG_STORE], 'readwrite');
+                const store = transaction.objectStore(CONFIG_STORE);
+                store.put(config);
+
+                transaction.oncomplete = () => {
+                    document.getElementById('empresaNIT').textContent = config.nit;
+                    document.getElementById('empresaDireccion').textContent = config.direccion;
+                    document.getElementById('empresaCiudad').textContent = config.ciudad;
+                    document.getElementById('empresaTelefono').textContent = config.telefono;
+                    document.getElementById('empresaEmail').textContent = config.email;
+                    document.getElementById('empresaPropietario').textContent = config.propietario;
+                    cerrarConfiguracion();
+                    showToast('Configuración guardada correctamente');
+                };
+            } catch (error) {
+                console.error('Error al guardar config:', error);
+                showToast('Error al guardar configuración', 'error');
+            }
+        }
+
+        async function cargarConfiguracion() {
+            try {
+                const transaction = db.transaction([CONFIG_STORE], 'readonly');
+                const store = transaction.objectStore(CONFIG_STORE);
+                const request = store.get('empresa');
+
+                request.onsuccess = () => {
+                    const config = request.result;
+                    if (config) {
+                        document.getElementById('empresaNIT').textContent = config.nit || '5821374015';
+                        document.getElementById('empresaDireccion').textContent = config.direccion || 'Urbanización el Bibosi, Av. principal 200 mts. de la carretera';
+                        document.getElementById('empresaCiudad').textContent = config.ciudad || 'Santa Cruz - Bolivia';
+                        document.getElementById('empresaTelefono').textContent = config.telefono || '72613751 / 76686673';
+                        document.getElementById('empresaEmail').textContent = config.email || 'Adalid37rojas@hotmail.com';
+                        document.getElementById('empresaPropietario').textContent = config.propietario || 'Adalid Rojas C.';
+                    }
+                };
+            } catch (error) {
+                console.error('Error al cargar config:', error);
+            }
+        }
+
+        // ==================== LOGO ====================
+
+        function cargarLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const logoData = e.target.result;
+                document.getElementById('logoImg').src = logoData;
+                document.getElementById('logoImg').classList.remove('hidden');
+                document.getElementById('logoPlaceholder').classList.add('hidden');
+                
+                // Guardar en IndexedDB
+                guardarLogo(logoData);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function guardarLogo(logoData) {
+            try {
+                const transaction = db.transaction([CONFIG_STORE], 'readwrite');
+                const store = transaction.objectStore(CONFIG_STORE);
+                store.put({ key: 'logo', data: logoData });
+            } catch (error) {
+                console.error('Error al guardar logo:', error);
+            }
+        }
+
+        async function cargarLogoGuardado() {
+            try {
+                const transaction = db.transaction([CONFIG_STORE], 'readonly');
+                const store = transaction.objectStore(CONFIG_STORE);
+                const request = store.get('logo');
+
+                request.onsuccess = () => {
+                    const logo = request.result;
+                    if (logo && logo.data) {
+                        document.getElementById('logoImg').src = logo.data;
+                        document.getElementById('logoImg').classList.remove('hidden');
+                        document.getElementById('logoPlaceholder').classList.add('hidden');
+                    }
+                };
+            } catch (error) {
+                console.error('Error al cargar logo:', error);
+            }
         }
 
         // ==================== UTILIDADES ====================
@@ -962,7 +1171,6 @@
             }, 3000);
         }
 
-        // Actualizar nombre en firma cuando se ingresa cliente
         document.getElementById('clienteNombre').addEventListener('input', function() {
             document.getElementById('firmaClienteNombre').textContent = this.value || '_________________________';
         });
@@ -977,7 +1185,7 @@
                         console.log('✅ Service Worker registrado:', registration.scope);
                     })
                     .catch((error) => {
-                        console.log('❌ Error al registrar Service Worker:', error);
+                        console.log(' Error al registrar Service Worker:', error);
                     });
             });
         }
