@@ -17,6 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -128,7 +129,6 @@
             color: #1a202c;
         }
 
-        /* Input del número de proforma - CLARAMENTE EDITABLE */
         #numeroProforma {
             background: #f0f4f8;
             border: 2px solid #1a6fc4;
@@ -290,9 +290,9 @@
                         <i class="fas fa-search"></i>
                         <span>Buscar</span>
                     </button>
-                    <button onclick="exportarRespaldo()" class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                        <i class="fas fa-download"></i>
-                        <span>Respaldo</span>
+                    <button onclick="exportarRespaldoExcel()" class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Respaldo Excel</span>
                     </button>
                     <button onclick="importarRespaldo()" class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
                         <i class="fas fa-upload"></i>
@@ -528,6 +528,9 @@
             </button>
             <button onclick="generarPDF()" class="btn bg-brand-dark hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Generar PDF">
                 <i class="fas fa-file-pdf text-xl"></i>
+            </button>
+            <button onclick="exportarExcelIndividual()" class="btn bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Exportar a Excel">
+                <i class="fas fa-file-excel text-xl"></i>
             </button>
             <button onclick="clonarCotizacion()" class="btn bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" title="Clonar Última Cotización">
                 <i class="fas fa-copy text-xl"></i>
@@ -934,7 +937,7 @@
 
                 transaction.oncomplete = () => {
                     showToast('Cotización eliminada correctamente');
-                    buscarCotizaciones(); // Refrescar la lista
+                    buscarCotizaciones();
                 };
             } catch (error) {
                 console.error('Error al eliminar:', error);
@@ -1038,45 +1041,52 @@
             try {
                 const elemento = document.getElementById('cotizacionForm');
                 
-                await new Promise(resolve => setTimeout(resolve, 200));
+                // FORZAR tamaño de hoja carta (8.5 x 11 pulgadas = 215.9 x 279.4 mm)
+                const anchoOriginal = elemento.style.width;
+                const maxWidthOriginal = elemento.style.maxWidth;
+                const paddingOriginal = elemento.style.padding;
+                
+                elemento.style.width = '215mm';
+                elemento.style.maxWidth = '215mm';
+                elemento.style.padding = '20mm';
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
                 
                 const canvas = await html2canvas(elemento, {
-                    scale: 2,
+                    scale: 1.5,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    allowTaint: true
+                    allowTaint: true,
+                    width: 816, // 215mm a 96 DPI
+                    windowWidth: 816
                 });
 
+                // Restaurar estilos
+                elemento.style.width = anchoOriginal;
+                elemento.style.maxWidth = maxWidthOriginal;
+                elemento.style.padding = paddingOriginal;
+                
                 const imgData = canvas.toDataURL('image/png');
-                const imgWidth = 210;
+                const imgWidth = 215; // mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdf = new jsPDF('p', 'mm', 'letter'); // Tamaño carta
                 
-                if (imgHeight <= 297) {
-                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                } else {
-                    let heightLeft = imgHeight;
-                    let position = 0;
-                    
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= 297;
-                    
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= 297;
-                    }
-                }
-
-                pdf.save(`Proforma_${document.getElementById('numeroProforma').value.replace('#', '')}.pdf`);
-                showToast('PDF generado correctamente');
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                const numeroProforma = document.getElementById('numeroProforma').value.replace('#', '');
+                pdf.save(`Proforma_${numeroProforma}.pdf`);
+                showToast('PDF generado correctamente (Tamaño Carta)');
             } catch (error) {
                 console.error('Error al generar PDF:', error);
                 showToast('Error al generar PDF: ' + error.message, 'error');
+                
+                const elemento = document.getElementById('cotizacionForm');
+                elemento.style.width = '';
+                elemento.style.maxWidth = '';
+                elemento.style.padding = '';
             } finally {
                 inputs.forEach(el => el.classList.remove('ocultar-pdf'));
                 textos.forEach(el => {
@@ -1114,35 +1124,183 @@
             });
         }
 
-        async function exportarRespaldo() {
+        // NUEVA FUNCIÓN: Exportar cotización individual a Excel
+        function exportarExcelIndividual() {
+            const cotizacion = obtenerDatosCotizacion();
+            
+            if (!cotizacion.cliente || cotizacion.items.length === 0) {
+                showToast('Complete los datos antes de exportar a Excel', 'error');
+                return;
+            }
+
+            // Crear datos para Excel
+            const datosExcel = {
+                'DATOS GENERALES': [
+                    ['PROFORMA N°', cotizacion.numero],
+                    ['Fecha de Emisión', cotizacion.fecha],
+                    ['Fecha de Vencimiento', cotizacion.vencimiento],
+                    ['Validez (días)', cotizacion.validez],
+                    ['CLIENTE', cotizacion.cliente],
+                    ['NIT', cotizacion.nit],
+                    ['Teléfono', cotizacion.telefono],
+                    ['Dirección', cotizacion.direccion],
+                ],
+                'DETALLE DE ITEMS': [
+                    ['ÍTEM', 'CANTIDAD', 'UNIDAD', 'DESCRIPCIÓN', 'PRECIO UNIT. (Bs)', 'TOTAL (Bs)'],
+                    ...cotizacion.items.map((item, index) => [
+                        index + 1,
+                        item.cantidad,
+                        item.unidad,
+                        item.descripcion,
+                        item.precio,
+                        item.total
+                    ])
+                ],
+                'TOTALES': [
+                    ['SUBTOTAL', cotizacion.subtotal],
+                    ['DESCUENTO', cotizacion.descuento],
+                    ['TOTAL', cotizacion.total]
+                ],
+                'CONDICIONES': [
+                    ['Lugar de entrega', cotizacion.lugarEntrega],
+                    ['Tiempo de entrega', cotizacion.tiempoEntrega + ' días'],
+                    ['Forma de pago', cotizacion.formaPago],
+                    ['Notas adicionales', cotizacion.notas]
+                ]
+            };
+
+            // Crear workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Agregar cada hoja
+            Object.keys(datosExcel).forEach(sheetName => {
+                const ws = XLSX.utils.aoa_to_sheet(datosExcel[sheetName]);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+
+            // Generar nombre de archivo
+            const nombreArchivo = `Proforma_${cotizacion.numero}_${cotizacion.cliente.replace(/\s+/g, '_')}.xlsx`;
+            
+            // Descargar
+            XLSX.writeFile(wb, nombreArchivo);
+            showToast('Excel exportado correctamente');
+        }
+
+        // NUEVA FUNCIÓN: Exportar TODO el respaldo a Excel organizado por cliente
+        async function exportarRespaldoExcel() {
             try {
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
 
                 request.onsuccess = () => {
-                    const data = request.result;
-                    const jsonStr = JSON.stringify(data, null, 2);
-                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+                    const cotizaciones = request.result;
                     
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `respaldo_cotizaciones_${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    if (cotizaciones.length === 0) {
+                        showToast('No hay cotizaciones para exportar', 'error');
+                        return;
+                    }
+
+                    // Organizar por cliente
+                    const porCliente = {};
+                    cotizaciones.forEach(c => {
+                        if (!porCliente[c.cliente]) {
+                            porCliente[c.cliente] = [];
+                        }
+                        porCliente[c.cliente].push(c);
+                    });
+
+                    // Crear workbook
+                    const wb = XLSX.utils.book_new();
+
+                    // Hoja resumen general
+                    const resumenData = [
+                        ['RESUMEN GENERAL DE COTIZACIONES'],
+                        ['Fecha de exportación:', new Date().toLocaleDateString('es-BO')],
+                        ['Total de cotizaciones:', cotizaciones.length],
+                        ['Total de clientes:', Object.keys(porCliente).length],
+                        [],
+                        ['N° PROFORMA', 'CLIENTE', 'NIT', 'FECHA', 'TOTAL (Bs)', 'ESTADO']
+                    ];
+
+                    cotizaciones.forEach(c => {
+                        resumenData.push([
+                            c.numero,
+                            c.cliente,
+                            c.nit,
+                            c.fecha,
+                            c.total,
+                            'Guardada'
+                        ]);
+                    });
+
+                    const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+                    XLSX.utils.book_append_sheet(wb, wsResumen, 'RESUMEN');
+
+                    // Hoja por cada cliente
+                    Object.keys(porCliente).forEach(cliente => {
+                        const cotizacionesCliente = porCliente[cliente];
+                        
+                        const datosCliente = [
+                            [`COTIZACIONES - ${cliente.toUpperCase()}`],
+                            ['NIT:', cotizacionesCliente[0].nit || 'N/A'],
+                            ['Teléfono:', cotizacionesCliente[0].telefono || 'N/A'],
+                            ['Dirección:', cotizacionesCliente[0].direccion || 'N/A'],
+                            [],
+                            ['N°', 'FECHA', 'VENCIMIENTO', 'SUBTOTAL', 'DESCUENTO', 'TOTAL', 'FORMA PAGO']
+                        ];
+
+                        cotizacionesCliente.forEach(c => {
+                            datosCliente.push([
+                                c.numero,
+                                c.fecha,
+                                c.vencimiento,
+                                c.subtotal,
+                                c.descuento,
+                                c.total,
+                                c.formaPago
+                            ]);
+                        });
+
+                        // Agregar detalle de items
+                        datosCliente.push([]);
+                        datosCliente.push(['DETALLE DE ITEMS POR COTIZACIÓN']);
+                        cotizacionesCliente.forEach(c => {
+                            datosCliente.push([`Proforma #${c.numero}`]);
+                            datosCliente.push(['ÍTEM', 'CANT', 'UNIDAD', 'DESCRIPCIÓN', 'PRECIO', 'TOTAL']);
+                            c.items.forEach((item, idx) => {
+                                datosCliente.push([
+                                    idx + 1,
+                                    item.cantidad,
+                                    item.unidad,
+                                    item.descripcion,
+                                    item.precio,
+                                    item.total
+                                ]);
+                            });
+                            datosCliente.push([]);
+                        });
+
+                        const wsCliente = XLSX.utils.aoa_to_sheet(datosCliente);
+                        const nombreHoja = cliente.substring(0, 31); // Excel limita a 31 caracteres
+                        XLSX.utils.book_append_sheet(wb, wsCliente, nombreHoja);
+                    });
+
+                    // Generar nombre de archivo
+                    const fecha = new Date().toISOString().split('T')[0];
+                    const nombreArchivo = `Respaldo_Completo_AJ_Maestranza_${fecha}.xlsx`;
                     
-                    showToast('Respaldo exportado correctamente');
+                    // Descargar
+                    XLSX.writeFile(wb, nombreArchivo);
+                    showToast(`Respaldo Excel exportado: ${cotizaciones.length} cotizaciones de ${Object.keys(porCliente).length} clientes`);
                 };
             } catch (error) {
-                console.error('Error al exportar:', error);
-                showToast('Error al exportar respaldo', 'error');
+                console.error('Error al exportar Excel:', error);
+                showToast('Error al exportar respaldo Excel', 'error');
             }
         }
 
-        function importarRespaldo() {
+        async function importarRespaldo() {
             document.getElementById('fileImport').click();
         }
 
