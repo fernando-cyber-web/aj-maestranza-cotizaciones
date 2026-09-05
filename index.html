@@ -129,17 +129,18 @@
             color: #1a202c;
         }
 
+        /* Número de proforma COMPACTO y PROFESIONAL */
         #numeroProforma {
             background: #f0f4f8;
             border: 2px solid #1a6fc4;
-            text-align: right;
-            width: 120px;
-            font-size: 2rem;
+            text-align: center;
+            width: 90px;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #0d3b66;
             font-family: 'Roboto Mono', monospace;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 6px 8px;
+            border-radius: 6px;
             cursor: text;
         }
 
@@ -164,6 +165,71 @@
 
         .mostrar-pdf-inline {
             display: inline !important;
+        }
+
+        /* ESTILOS ESPECÍFICOS PARA PDF */
+        .pdf-mode {
+            font-size: 11px !important;
+            line-height: 1.3 !important;
+        }
+
+        .pdf-mode h2 {
+            font-size: 16px !important;
+            margin-bottom: 4px !important;
+        }
+
+        .pdf-mode h3 {
+            font-size: 12px !important;
+            margin-bottom: 6px !important;
+        }
+
+        .pdf-mode .card {
+            padding: 8px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .pdf-mode .print-section {
+            margin-bottom: 8px !important;
+        }
+
+        .pdf-mode .space-y-3 > * + * {
+            margin-top: 4px !important;
+        }
+
+        .pdf-mode .grid {
+            gap: 8px !important;
+        }
+
+        .pdf-mode table {
+            font-size: 10px !important;
+        }
+
+        .pdf-mode th, .pdf-mode td {
+            padding: 3px 4px !important;
+        }
+
+        .pdf-mode #numeroProforma {
+            font-size: 1.1rem !important;
+            width: 80px !important;
+            padding: 4px 6px !important;
+        }
+
+        .pdf-mode .print-header {
+            padding-bottom: 8px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .pdf-mode .logo-container {
+            width: 50px !important;
+            height: 50px !important;
+        }
+
+        .pdf-mode .mt-8 {
+            margin-top: 16px !important;
+        }
+
+        .pdf-mode .pt-8 {
+            padding-top: 16px !important;
         }
 
         @media print {
@@ -1041,41 +1107,49 @@
             try {
                 const elemento = document.getElementById('cotizacionForm');
                 
-                // FORZAR tamaño de hoja carta (8.5 x 11 pulgadas = 215.9 x 279.4 mm)
-                const anchoOriginal = elemento.style.width;
-                const maxWidthOriginal = elemento.style.maxWidth;
-                const paddingOriginal = elemento.style.padding;
+                // AGREGAR clase de modo PDF para comprimir contenido
+                elemento.classList.add('pdf-mode');
                 
-                elemento.style.width = '215mm';
-                elemento.style.maxWidth = '215mm';
-                elemento.style.padding = '20mm';
-                
+                // Esperar a que se apliquen los estilos
                 await new Promise(resolve => setTimeout(resolve, 300));
                 
                 const canvas = await html2canvas(elemento, {
-                    scale: 1.5,
+                    scale: 1.2,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    allowTaint: true,
-                    width: 816, // 215mm a 96 DPI
-                    windowWidth: 816
+                    allowTaint: true
                 });
 
-                // Restaurar estilos
-                elemento.style.width = anchoOriginal;
-                elemento.style.maxWidth = maxWidthOriginal;
-                elemento.style.padding = paddingOriginal;
+                // QUITAR clase de modo PDF
+                elemento.classList.remove('pdf-mode');
                 
                 const imgData = canvas.toDataURL('image/png');
-                const imgWidth = 215; // mm
+                const imgWidth = 215.9; // Ancho carta en mm (8.5 pulgadas)
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'letter'); // Tamaño carta
                 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                
+                // Si cabe en 1 página, perfecto
+                if (imgHeight <= 279.4) {
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                } else {
+                    // Si no cabe, dividir en páginas sin cortar contenido
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= 279.4;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= 279.4;
+                    }
+                }
+
                 const numeroProforma = document.getElementById('numeroProforma').value.replace('#', '');
                 pdf.save(`Proforma_${numeroProforma}.pdf`);
                 showToast('PDF generado correctamente (Tamaño Carta)');
@@ -1084,9 +1158,7 @@
                 showToast('Error al generar PDF: ' + error.message, 'error');
                 
                 const elemento = document.getElementById('cotizacionForm');
-                elemento.style.width = '';
-                elemento.style.maxWidth = '';
-                elemento.style.padding = '';
+                elemento.classList.remove('pdf-mode');
             } finally {
                 inputs.forEach(el => el.classList.remove('ocultar-pdf'));
                 textos.forEach(el => {
@@ -1124,7 +1196,6 @@
             });
         }
 
-        // NUEVA FUNCIÓN: Exportar cotización individual a Excel
         function exportarExcelIndividual() {
             const cotizacion = obtenerDatosCotizacion();
             
@@ -1133,7 +1204,6 @@
                 return;
             }
 
-            // Crear datos para Excel
             const datosExcel = {
                 'DATOS GENERALES': [
                     ['PROFORMA N°', cotizacion.numero],
@@ -1169,24 +1239,19 @@
                 ]
             };
 
-            // Crear workbook
             const wb = XLSX.utils.book_new();
             
-            // Agregar cada hoja
             Object.keys(datosExcel).forEach(sheetName => {
                 const ws = XLSX.utils.aoa_to_sheet(datosExcel[sheetName]);
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
             });
 
-            // Generar nombre de archivo
             const nombreArchivo = `Proforma_${cotizacion.numero}_${cotizacion.cliente.replace(/\s+/g, '_')}.xlsx`;
             
-            // Descargar
             XLSX.writeFile(wb, nombreArchivo);
             showToast('Excel exportado correctamente');
         }
 
-        // NUEVA FUNCIÓN: Exportar TODO el respaldo a Excel organizado por cliente
         async function exportarRespaldoExcel() {
             try {
                 const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -1201,7 +1266,6 @@
                         return;
                     }
 
-                    // Organizar por cliente
                     const porCliente = {};
                     cotizaciones.forEach(c => {
                         if (!porCliente[c.cliente]) {
@@ -1210,10 +1274,8 @@
                         porCliente[c.cliente].push(c);
                     });
 
-                    // Crear workbook
                     const wb = XLSX.utils.book_new();
 
-                    // Hoja resumen general
                     const resumenData = [
                         ['RESUMEN GENERAL DE COTIZACIONES'],
                         ['Fecha de exportación:', new Date().toLocaleDateString('es-BO')],
@@ -1237,7 +1299,6 @@
                     const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
                     XLSX.utils.book_append_sheet(wb, wsResumen, 'RESUMEN');
 
-                    // Hoja por cada cliente
                     Object.keys(porCliente).forEach(cliente => {
                         const cotizacionesCliente = porCliente[cliente];
                         
@@ -1262,7 +1323,6 @@
                             ]);
                         });
 
-                        // Agregar detalle de items
                         datosCliente.push([]);
                         datosCliente.push(['DETALLE DE ITEMS POR COTIZACIÓN']);
                         cotizacionesCliente.forEach(c => {
@@ -1282,15 +1342,13 @@
                         });
 
                         const wsCliente = XLSX.utils.aoa_to_sheet(datosCliente);
-                        const nombreHoja = cliente.substring(0, 31); // Excel limita a 31 caracteres
+                        const nombreHoja = cliente.substring(0, 31);
                         XLSX.utils.book_append_sheet(wb, wsCliente, nombreHoja);
                     });
 
-                    // Generar nombre de archivo
                     const fecha = new Date().toISOString().split('T')[0];
                     const nombreArchivo = `Respaldo_Completo_AJ_Maestranza_${fecha}.xlsx`;
                     
-                    // Descargar
                     XLSX.writeFile(wb, nombreArchivo);
                     showToast(`Respaldo Excel exportado: ${cotizaciones.length} cotizaciones de ${Object.keys(porCliente).length} clientes`);
                 };
@@ -1300,7 +1358,7 @@
             }
         }
 
-        async function importarRespaldo() {
+        function importarRespaldo() {
             document.getElementById('fileImport').click();
         }
 
